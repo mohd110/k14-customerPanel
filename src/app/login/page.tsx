@@ -129,14 +129,6 @@ function LoginInner() {
               {loading ? <Loader2 className="size-4 animate-spin" /> : <>Login <ArrowRight className="size-4" /></>}
             </button>
 
-            <button
-              type="button"
-              onClick={() => router.push('/menu')}
-              className="mt-3 flex h-12 w-full items-center justify-center rounded-lg border border-[#7a2a2f]/60 text-xs font-bold tracking-[0.15em] text-[#b6555b] transition-colors hover:bg-[#7a2a2f]/10"
-            >
-              CONTINUE AS GUEST
-            </button>
-
             <p className="mt-7 text-center text-xs text-white/50">Don&apos;t have an account?</p>
             <button
               type="button"

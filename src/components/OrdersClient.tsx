@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { Order, OrderStatus } from '@/lib/types'
 import Link from 'next/link'
-import { CheckCircle, ChefHat, Bike, Package, Clock, ArrowRight } from 'lucide-react'
+import { CheckCircle, ChefHat, Bike, Package, Clock, ArrowRight, ThumbsUp } from 'lucide-react'
 
 interface Props {
   initialOrders: Order[]
@@ -13,13 +13,16 @@ interface Props {
 }
 
 const STATUS_STEPS: { status: OrderStatus; label: string; icon: React.ElementType }[] = [
-  { status: 'pending', label: 'Order Received', icon: Package },
+  { status: 'pending', label: 'Received', icon: Package },
+  { status: 'accepted', label: 'Accepted', icon: ThumbsUp },
   { status: 'preparing', label: 'Preparing', icon: ChefHat },
-  { status: 'out_for_delivery', label: 'Out for Delivery', icon: Bike },
+  { status: 'out_for_delivery', label: 'On the Way', icon: Bike },
   { status: 'delivered', label: 'Arrived', icon: CheckCircle },
 ]
 
 function statusIndex(status: OrderStatus) {
+  // 'ready' isn't its own step — treat it as still "preparing".
+  if (status === 'ready') return STATUS_STEPS.findIndex((s) => s.status === 'preparing')
   return STATUS_STEPS.findIndex((s) => s.status === status)
 }
 

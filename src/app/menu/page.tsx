@@ -8,7 +8,7 @@ import {
   ShoppingBag,
   LayoutGrid,
   UtensilsCrossed,
-  Heart,
+  ClipboardList,
   User,
   Plus,
   Minus,
@@ -61,8 +61,13 @@ function QtyModal({
   onConfirm: (item: Product, qty: number) => void
 }) {
   const [qty, setQty] = useState(1)
-  const dec = () => setQty((q) => Math.max(1, q - 1))
-  const inc = () => setQty((q) => Math.min(999, q + 1))
+  const [qtyText, setQtyText] = useState('1')
+  const setBoth = (n: number) => {
+    setQty(n)
+    setQtyText(String(n))
+  }
+  const dec = () => setBoth(Math.max(1, qty - 1))
+  const inc = () => setBoth(qty + 1)
 
   return (
     <div
@@ -102,11 +107,16 @@ function QtyModal({
             <input
               type="number"
               min={1}
-              max={999}
-              value={qty}
+              value={qtyText}
               onChange={(e) => {
-                const n = parseInt(e.target.value, 10)
-                setQty(Number.isNaN(n) ? 1 : Math.min(999, Math.max(1, n)))
+                const raw = e.target.value.replace(/[^0-9]/g, '')
+                setQtyText(raw)
+                const n = parseInt(raw, 10)
+                if (!Number.isNaN(n)) setQty(Math.max(1, n))
+              }}
+              onBlur={() => {
+                const n = parseInt(qtyText, 10)
+                setBoth(Number.isNaN(n) ? 1 : Math.max(1, n))
               }}
               className="w-14 bg-transparent text-center text-lg font-bold text-white outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
             />
@@ -135,6 +145,7 @@ export default function MenuPage() {
   const [modalItem, setModalItem] = useState<Product | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [loggedIn, setLoggedIn] = useState(false)
 
   const items = useCart((s) => s.items)
   const add = useCart((s) => s.add)
@@ -153,6 +164,8 @@ export default function MenuPage() {
         else setProducts(data ?? [])
         setLoading(false)
       })
+
+    supabase.auth.getUser().then(({ data }: { data: { user: unknown | null } }) => setLoggedIn(!!data.user))
   }, [])
 
   const confirmAdd = (item: Product, qty: number) => {
@@ -235,8 +248,8 @@ export default function MenuPage() {
         {[
           { icon: UtensilsCrossed, label: 'Menu', href: '/menu', active: true },
           { icon: ShoppingBag, label: 'Cart', href: '/cart', active: false },
-          { icon: Heart, label: 'Saved', href: '/menu', active: false },
-          { icon: User, label: 'Profile', href: '/login', active: false },
+          { icon: ClipboardList, label: 'Orders', href: loggedIn ? '/orders' : '/login', active: false },
+          { icon: User, label: 'Profile', href: loggedIn ? '/profile' : '/login', active: false },
         ].map(({ icon: Icon, label, href, active }) => (
           <Link
             key={label}
