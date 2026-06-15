@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { Order, OrderStatus } from '@/lib/types'
 import Link from 'next/link'
 import { CheckCircle, ChefHat, Bike, Package, Clock, ArrowRight } from 'lucide-react'
@@ -73,9 +74,10 @@ export default function OrdersClient({ initialOrders, userId }: Props) {
       .on('postgres_changes', {
         event: 'UPDATE', schema: 'public', table: 'orders',
         filter: `customer_id=eq.${userId}`,
-      }, (payload) => {
+      }, (payload: RealtimePostgresChangesPayload<Order>) => {
+        const updated = payload.new as Order
         setOrders((prev) =>
-          prev.map((o) => o.id === payload.new.id ? { ...o, ...(payload.new as Partial<Order>) } : o)
+          prev.map((o) => o.id === updated.id ? { ...o, ...updated } : o)
         )
       })
       .subscribe()

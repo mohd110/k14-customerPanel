@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronLeft, Minus, Plus, Trash2, ArrowRight, ShoppingBag } from 'lucide-react'
 import { useCart, useHydrated, cartTotal } from '@/lib/k14-store'
 import { money } from '@/lib/format'
+import { placeholderImage } from '@/lib/placeholder-image'
 
 const SERVICE_FEE = 20 // rupees
 
@@ -48,9 +49,9 @@ export default function CartPage() {
                 <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-black/30">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={item.photo_url || '/k14/logo.png'}
+                    src={item.photo_url || placeholderImage(item.name)}
                     alt={item.name}
-                    className={item.photo_url ? 'h-full w-full object-cover' : 'h-full w-full object-contain p-3 opacity-50'}
+                    className="h-full w-full object-cover"
                   />
                 </div>
                 <div className="flex flex-1 flex-col">

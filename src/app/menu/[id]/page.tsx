@@ -6,6 +6,7 @@ import { useCartStore } from '@/store/cart'
 import { Plus, Minus, Heart, Star, Clock, ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { MENU, TOPPINGS_MAP } from '@/lib/menu'
+import { placeholderImage } from '@/lib/placeholder-image'
 
 function getCategoryEmoji(category: string) {
   switch (category) {
@@ -76,7 +77,7 @@ export default function ProductDetailPage({
       name: finalName,
       price: finalPrice,
       description: product.description,
-      photo_url: product.photo,
+      photo_url: product.photo || placeholderImage(product.name, product.category),
       is_available: true,
     })
 
@@ -105,23 +106,19 @@ export default function ProductDetailPage({
       <div className="flex-1 overflow-y-auto px-5 py-4 pb-28">
         {/* Product Image */}
         <div className="relative w-full aspect-square max-h-[300px] rounded-3xl overflow-hidden bg-neutral-900 mb-5 shadow-inner flex items-center justify-center text-8xl">
-          {product.photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={product.photo}
-              alt={product.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLElement).style.display = 'none';
-                const parent = (e.target as HTMLElement).parentElement;
-                if (parent) {
-                  parent.innerText = getCategoryEmoji(product.category);
-                }
-              }}
-            />
-          ) : (
-            <span>{getCategoryEmoji(product.category)}</span>
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={product.photo || placeholderImage(product.name, product.category)}
+            alt={product.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = 'none';
+              const parent = (e.target as HTMLElement).parentElement;
+              if (parent) {
+                parent.innerText = getCategoryEmoji(product.category);
+              }
+            }}
+          />
           {/* Favorite heart button */}
           <button
             onClick={() => setIsFavorite(!isFavorite)}

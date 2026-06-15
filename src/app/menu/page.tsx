@@ -19,6 +19,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Product } from '@/lib/types'
 import { useCart, useHydrated, cartCount } from '@/lib/k14-store'
 import { money } from '@/lib/format'
+import { placeholderImage } from '@/lib/placeholder-image'
 
 function ItemCard({ item, onAdd }: { item: Product; onAdd: (item: Product) => void }) {
   return (
@@ -26,9 +27,9 @@ function ItemCard({ item, onAdd }: { item: Product; onAdd: (item: Product) => vo
       <div className="relative h-44 w-full overflow-hidden bg-black/30">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={item.photo_url || '/k14/logo.png'}
+          src={item.photo_url || placeholderImage(item.name)}
           alt={item.name}
-          className={item.photo_url ? 'h-full w-full object-cover' : 'h-full w-full object-contain p-10 opacity-50'}
+          className="h-full w-full object-cover"
         />
       </div>
 
@@ -76,9 +77,9 @@ function QtyModal({
           <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-black/30">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={item.photo_url || '/k14/logo.png'}
+              src={item.photo_url || placeholderImage(item.name)}
               alt={item.name}
-              className={item.photo_url ? 'h-full w-full object-cover' : 'h-full w-full object-contain p-2 opacity-50'}
+              className="h-full w-full object-cover"
             />
           </div>
           <div className="flex-1">

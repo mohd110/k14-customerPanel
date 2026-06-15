@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { Order, OrderStatus } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import OrderStatusBadge from './OrderStatusBadge'
@@ -44,13 +45,14 @@ export default function DashboardClient({ initialOrders }: Props) {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'orders' },
-        async (payload) => {
+        async (payload: RealtimePostgresChangesPayload<Order>) => {
+          const newRow = payload.new as Order
           const { data } = await supabase
             .from('orders')
             .select(
               '*, order_items(quantity, price_at_order, products(name)), profiles(full_name, phone)'
             )
-            .eq('id', payload.new.id)
+            .eq('id', newRow.id)
             .single()
           if (data) {
             setOrders((prev) => [data as Order, ...prev])
@@ -61,9 +63,10 @@ export default function DashboardClient({ initialOrders }: Props) {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'orders' },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<Order>) => {
+          const updated = payload.new as Order
           setOrders((prev) =>
-            prev.map((o) => (o.id === payload.new.id ? { ...o, ...payload.new } : o))
+            prev.map((o) => (o.id === updated.id ? { ...o, ...updated } : o))
           )
         }
       )
