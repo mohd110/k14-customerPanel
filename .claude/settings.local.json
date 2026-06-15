@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(echo \"started, pid $!\")",
+      "Bash(curl -s \"http://localhost:3000/menu\")",
+      "mcp__claude_ai_Figma__whoami",
+      "mcp__claude_ai_Figma__get_design_context",
+      "Bash(mkdir -p C:/Users/mohdm/Desktop/local_delivery_app/public/k14)",
+      "Bash(cp 'C:/Users/mohdm/Desktop/stitch_k14_tabbaruk_delivery_app \\(1\\)/stitch_k14_tabbaruk_delivery_app/splash_page_mobile_image_1/screen.png' C:/Users/mohdm/Desktop/local_delivery_app/public/k14/shrine-courtyard.png)",
+      "Bash(cp 'C:/Users/mohdm/Desktop/stitch_k14_tabbaruk_delivery_app \\(1\\)/stitch_k14_tabbaruk_delivery_app/splash_page_mobile_image_2/screen.png' C:/Users/mohdm/Desktop/local_delivery_app/public/k14/logo.png)",
+      "Bash(cp 'C:/Users/mohdm/Desktop/stitch_k14_tabbaruk_delivery_app \\(1\\)/stitch_k14_tabbaruk_delivery_app/splash_page_mobile_image_3/screen.png' C:/Users/mohdm/Desktop/local_delivery_app/public/k14/signature-khreet.png)",
+      "Bash(cp 'C:/Users/mohdm/Desktop/stitch_k14_tabbaruk_delivery_app \\(1\\)/stitch_k14_tabbaruk_delivery_app/splash_page_mobile_image_4/screen.png' C:/Users/mohdm/Desktop/local_delivery_app/public/k14/naan-sweets.png)",
+      "Bash(curl -s https://joucixsbrgxjztfwubku.supabase.co/rest/v1/products?select=* -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpvdWNpeHNicmd4anp0Znd1Ymt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTIzMTEsImV4cCI6MjA5NzA4ODMxMX0.syHsSkrOiaUg_yrSEYkobOvQiJGL3muZ9zRvz0umkqo' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpvdWNpeHNicmd4anp0Znd1Ymt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTIzMTEsImV4cCI6MjA5NzA4ODMxMX0.syHsSkrOiaUg_yrSEYkobOvQiJGL3muZ9zRvz0umkqo')",
+      "Bash(curl -s -w '\\\\nHTTP %{http_code}\\\\n' https://joucixsbrgxjztfwubku.supabase.co/rest/v1/products -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpvdWNpeHNicmd4anp0Znd1Ymt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTIzMTEsImV4cCI6MjA5NzA4ODMxMX0.syHsSkrOiaUg_yrSEYkobOvQiJGL3muZ9zRvz0umkqo' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpvdWNpeHNicmd4anp0Znd1Ymt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTIzMTEsImV4cCI6MjA5NzA4ODMxMX0.syHsSkrOiaUg_yrSEYkobOvQiJGL3muZ9zRvz0umkqo' -H 'Content-Type: application/json' -H 'Prefer: return=representation' -d '{\"name\":\"__probe__\",\"description\":\"probe\",\"price\":100,\"photo_url\":\"/k14/logo.png\",\"is_available\":true}')",
+      "Bash(find supabase *)",
+      "Bash(ls supabase *)",
+      "Bash(curl -s -D - https://joucixsbrgxjztfwubku.supabase.co/rest/v1/products?select=* -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpvdWNpeHNicmd4anp0Znd1Ymt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTIzMTEsImV4cCI6MjA5NzA4ODMxMX0.syHsSkrOiaUg_yrSEYkobOvQiJGL3muZ9zRvz0umkqo' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpvdWNpeHNicmd4anp0Znd1Ymt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MTIzMTEsImV4cCI6MjA5NzA4ODMxMX0.syHsSkrOiaUg_yrSEYkobOvQiJGL3muZ9zRvz0umkqo' -H 'Prefer: count=exact' -o /dev/null)",
+      "Bash(npx tsc *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:3000/menu\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3000/checkout\")",
+      "Bash(echo \"GET /checkout -> $\\(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3000/checkout\"\\)\")"
+    ]
+  }
+}
