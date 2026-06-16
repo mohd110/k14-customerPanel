@@ -3,11 +3,17 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
-import { Order, OrderStatus } from '@/lib/types'
+import { Order, OrderStatus, PaymentStatus } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import OrderStatusBadge from './OrderStatusBadge'
 import { toast } from 'sonner'
 import { MapPin, Phone } from 'lucide-react'
+
+const paymentBadge: Record<PaymentStatus, { label: string; cls: string }> = {
+  awaiting_verification: { label: 'Advance: unverified', cls: 'bg-yellow-500/15 text-yellow-400' },
+  paid:                  { label: 'Advance: paid',       cls: 'bg-green-500/15 text-green-400' },
+  failed:                { label: 'Advance: rejected',   cls: 'bg-red-500/15 text-red-400' },
+}
 
 const TRANSITIONS: Record<OrderStatus, { next: OrderStatus; label: string } | null> = {
   pending:          { next: 'accepted',        label: 'Accept Order'    },
@@ -88,6 +94,18 @@ export default function DashboardClient({ initialOrders }: Props) {
     setUpdating(null)
   }
 
+  async function setPayment(orderId: string, payment_status: PaymentStatus) {
+    setUpdating(orderId)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('orders')
+      .update({ payment_status })
+      .eq('id', orderId)
+    if (error) toast.error('Failed to update payment status')
+    else toast.success(payment_status === 'paid' ? 'Advance marked as paid' : 'Advance rejected')
+    setUpdating(null)
+  }
+
   if (orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -159,6 +177,47 @@ export default function DashboardClient({ initialOrders }: Props) {
                 )}
               </div>
             )}
+
+            {/* Advance payment */}
+            <div className="px-4 pb-3">
+              <div className="rounded-xl bg-black/30 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    Advance (40%): <span className="font-semibold text-white">₹{order.advance_amount ?? 0}</span>
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      paymentBadge[(order.payment_status ?? 'awaiting_verification') as PaymentStatus].cls
+                    }`}
+                  >
+                    {paymentBadge[(order.payment_status ?? 'awaiting_verification') as PaymentStatus].label}
+                  </span>
+                </div>
+                {order.payment_ref && (
+                  <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                    UTR: {order.payment_ref}
+                  </p>
+                )}
+                {(order.payment_status ?? 'awaiting_verification') === 'awaiting_verification' && (
+                  <div className="mt-2 flex gap-2">
+                    <Button
+                      className="h-9 flex-1 bg-green-600 hover:bg-green-700 rounded-lg text-xs font-semibold"
+                      onClick={() => setPayment(order.id, 'paid')}
+                      disabled={updating === order.id}
+                    >
+                      Verify Paid
+                    </Button>
+                    <Button
+                      className="h-9 flex-1 bg-red-600/80 hover:bg-red-700 rounded-lg text-xs font-semibold"
+                      onClick={() => setPayment(order.id, 'failed')}
+                      disabled={updating === order.id}
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Action */}
             <div className="px-4 pb-4">

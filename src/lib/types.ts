@@ -1,5 +1,6 @@
 export type UserRole = 'customer' | 'restaurant'
 export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled'
+export type PaymentStatus = 'awaiting_verification' | 'paid' | 'failed'
 
 export interface Profile {
   id: string
@@ -40,6 +41,9 @@ export interface Order {
   status: OrderStatus
   delivery_address: DeliveryAddress
   total: number
+  advance_amount: number
+  payment_status: PaymentStatus
+  payment_ref: string | null
   created_at: string
   profiles?: Pick<Profile, 'full_name' | 'phone'>
   order_items?: OrderItem[]

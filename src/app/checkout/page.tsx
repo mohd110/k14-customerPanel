@@ -13,18 +13,26 @@ import {
   MapPin,
   CheckCircle2,
   Loader2,
+  QrCode,
 } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { useCart, useHydrated, cartTotal } from '@/lib/k14-store'
 import { money } from '@/lib/format'
+import PaymentQR from '@/components/PaymentQR'
 
 type Fulfillment = 'pickup' | 'delivery'
 
 const TIME_SLOTS = ['10:00 AM', '12:30 PM', '03:00 PM', '06:30 PM', '08:00 PM']
-const STORE_ADDRESS = 'K14 Tabbruk Kitchen · Bab al-Qibla, Karbala'
+const STORE_ADDRESS = 'Hussainabad Food Court'
 const SERVICE_FEE = 20 // rupees
 const DELIVERY_FEE = 40 // rupees
+
+// Advance payment collected up front before the order is confirmed.
+const ADVANCE_RATE = 0.4 // 40%
+// 👇 Replace with the kitchen's real UPI ID and display name.
+const UPI_VPA = process.env.NEXT_PUBLIC_UPI_VPA || 'k14kitchen@upi'
+const UPI_PAYEE = process.env.NEXT_PUBLIC_UPI_PAYEE || 'K14 Tabbruk Kitchen'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -39,9 +47,11 @@ export default function CheckoutPage() {
   const [fulfillment, setFulfillment] = useState<Fulfillment>('pickup')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
+  const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [phoneOnFile, setPhoneOnFile] = useState(false)
   const [address, setAddress] = useState({ name: '', line: '', area: '' })
+  const [paymentRef, setPaymentRef] = useState('')
   const [placed, setPlaced] = useState(false)
 
   // Auth gate — guests must log in before checkout.
@@ -53,6 +63,8 @@ export default function CheckoutPage() {
         return
       }
       setUser(data.user)
+      // Prefill name from the account if available.
+      setName(((data.user.user_metadata?.full_name as string) || '').trim())
       // Prefill phone if the account already has one; otherwise it's required below.
       const existingPhone = (data.user.phone || (data.user.user_metadata?.phone as string) || '').trim()
       setPhone(existingPhone)
@@ -63,6 +75,14 @@ export default function CheckoutPage() {
 
   const deliveryFee = fulfillment === 'delivery' ? DELIVERY_FEE : 0
   const total = subtotal + SERVICE_FEE + deliveryFee
+  const advance = Math.round(total * ADVANCE_RATE)
+  const balance = total - advance
+  // UPI deep link — scanning opens the customer's banking app with payee + amount pre-filled.
+  const upiUri =
+    `upi://pay?pa=${encodeURIComponent(UPI_VPA)}` +
+    `&pn=${encodeURIComponent(UPI_PAYEE)}` +
+    `&am=${advance.toFixed(2)}&cu=INR` +
+    `&tn=${encodeURIComponent('K14 order advance (40%)')}`
 
   if (checking) {
     return (
@@ -82,12 +102,20 @@ export default function CheckoutPage() {
       toast.error('Please select a date and time')
       return
     }
+    if (!name.trim()) {
+      toast.error('Please enter your name')
+      return
+    }
     if (!phone.trim()) {
       toast.error('Please enter your phone number')
       return
     }
     if (fulfillment === 'delivery' && (!address.name || !address.line)) {
       toast.error('Please complete the delivery address')
+      return
+    }
+    if (!paymentRef.trim()) {
+      toast.error('Please pay the 40% advance and enter the UPI reference number')
       return
     }
 
@@ -99,7 +127,7 @@ export default function CheckoutPage() {
       {
         id: user.id,
         role: 'customer',
-        full_name: (user.user_metadata?.full_name as string) || user.email?.split('@')[0] || 'Guest',
+        full_name: name.trim() || (user.user_metadata?.full_name as string) || user.email?.split('@')[0] || 'Guest',
         email: user.email ?? '',
         phone: phone.trim() || null,
       },
@@ -113,12 +141,20 @@ export default function CheckoutPage() {
 
     const delivery_address =
       fulfillment === 'delivery'
-        ? { fulfillment, date, time, phone: phone.trim(), name: address.name, address: address.line, area: address.area }
-        : { fulfillment, date, time, phone: phone.trim(), store: STORE_ADDRESS }
+        ? { fulfillment, date, time, phone: phone.trim(), name: address.name || name.trim(), address: address.line, area: address.area }
+        : { fulfillment, date, time, phone: phone.trim(), name: name.trim(), store: STORE_ADDRESS }
 
     const { data: order, error: orderErr } = await supabase
       .from('orders')
-      .insert({ customer_id: user.id, status: 'pending', delivery_address, total })
+      .insert({
+        customer_id: user.id,
+        status: 'pending',
+        delivery_address,
+        total,
+        advance_amount: advance,
+        payment_status: 'awaiting_verification',
+        payment_ref: paymentRef.trim(),
+      })
       .select('id')
       .single()
 
@@ -156,6 +192,10 @@ export default function CheckoutPage() {
         <p className="mt-2 text-sm text-white/60">
           Your tabarruk order is booked for {date} at {time} ·{' '}
           {fulfillment === 'pickup' ? 'Store Pickup' : 'Porter Delivery'}.
+        </p>
+        <p className="mt-3 text-xs text-white/40">
+          We&apos;ve recorded your {money(advance)} advance (ref {paymentRef.trim()}). The kitchen
+          will verify it and accept your order shortly.
         </p>
         <Link
           href="/menu"
@@ -230,13 +270,23 @@ export default function CheckoutPage() {
           </div>
         </section>
 
-        {/* Contact phone */}
+        {/* Contact details */}
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">
-            CONTACT PHONE
-            {!phoneOnFile && <span className="text-[9px] text-[#b6555b]">REQUIRED</span>}
+            CONTACT DETAILS
+            <span className="text-[9px] text-[#b6555b]">REQUIRED</span>
           </h2>
           <div className="rounded-2xl border border-white/10 bg-[#17120c] p-4">
+            <label className="mb-1.5 block text-xs font-semibold text-white/60">Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name"
+              autoComplete="name"
+              className="mb-4 h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
+            />
+            <label className="mb-1.5 block text-xs font-semibold text-white/60">Phone</label>
             <input
               type="tel"
               value={phone}
@@ -336,6 +386,51 @@ export default function CheckoutPage() {
             <span className="text-[#d4af37]">{money(total)}</span>
           </div>
         </section>
+
+        {/* 40% advance payment */}
+        <section>
+          <h2 className="mb-3 flex items-center gap-2 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">
+            <QrCode className="size-3.5" /> ADVANCE PAYMENT (40%)
+            <span className="text-[9px] text-[#b6555b]">REQUIRED</span>
+          </h2>
+          <div className="rounded-2xl border border-white/10 bg-[#17120c] p-4">
+            <p className="text-sm text-white/60">
+              Pay <span className="font-bold text-[#d4af37]">{money(advance)}</span> now to confirm
+              your order. The remaining{' '}
+              <span className="font-semibold text-white/80">{money(balance)}</span> is collected on{' '}
+              {fulfillment === 'pickup' ? 'pickup' : 'delivery'}.
+            </p>
+
+            <div className="mt-4 flex flex-col items-center gap-3">
+              <PaymentQR value={upiUri} size={196} />
+              <p className="text-center text-[11px] text-white/40">
+                Scan with any UPI app (GPay · PhonePe · Paytm) to pay {money(advance)} to{' '}
+                <span className="text-white/60">{UPI_VPA}</span>
+              </p>
+            </div>
+
+            <label className="mt-5 mb-1.5 block text-xs font-semibold text-white/60">
+              UPI reference / UTR number
+            </label>
+            <input
+              value={paymentRef}
+              onChange={(e) => setPaymentRef(e.target.value)}
+              placeholder="e.g. 4163XXXXXXXX"
+              inputMode="numeric"
+              className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
+            />
+            <p className="mt-2 text-[11px] text-white/40">
+              Enter the 12-digit reference shown after payment. The kitchen verifies it before
+              accepting your order.
+            </p>
+          </div>
+        </section>
+
+        {fulfillment === 'delivery' && (
+          <p className="px-1 text-center text-[11px] text-white/40">
+            Note: Porter delivery charges will be added afterwards.
+          </p>
+        )}
       </div>
 
       {/* Place order */}
@@ -345,7 +440,11 @@ export default function CheckoutPage() {
           disabled={items.length === 0 || submitting}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-sm font-bold text-[#1a1206] transition-transform active:scale-[0.98] disabled:opacity-50"
         >
-          {submitting ? <Loader2 className="size-4 animate-spin" /> : `Place Order · ${money(total)}`}
+          {submitting ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            `Place Order · ${money(advance)} advance`
+          )}
         </button>
       </div>
     </div>
