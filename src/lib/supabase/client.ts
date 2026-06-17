@@ -5,20 +5,31 @@ const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // Return a no-op stub when Supabase env vars are not configured (design/test mode)
 function createNoOpClient() {
-  const noop = () => Promise.resolve({ data: null, error: null })
+  const result = Promise.resolve({ data: null, error: null })
+  // A self-referential query builder so any chain of .select().eq().order()
+  // etc. resolves to an empty result and is awaitable / thenable.
+  const builder: any = {
+    select: () => builder,
+    insert: () => result,
+    update: () => builder,
+    upsert: () => result,
+    delete: () => builder,
+    eq: () => builder,
+    in: () => builder,
+    order: () => builder,
+    limit: () => builder,
+    single: () => result,
+    maybeSingle: () => result,
+    then: (...args: any[]) => result.then(...args),
+  }
   return {
     auth: {
-      signInWithPassword: noop,
-      signOut: noop,
+      signInWithPassword: () => result,
+      signOut: () => result,
       getUser: () => Promise.resolve({ data: { user: null }, error: null }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
     },
-    from: () => ({
-      select: () => ({ eq: () => ({ single: noop, order: noop }), order: noop }),
-      insert: noop,
-      update: noop,
-      delete: noop,
-    }),
+    from: () => builder,
     channel: () => ({
       on: () => ({ subscribe: () => {} }),
     }),

@@ -14,6 +14,8 @@ import {
   CheckCircle2,
   Loader2,
   QrCode,
+  Upload,
+  X,
 } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
@@ -51,7 +53,8 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState('')
   const [phoneOnFile, setPhoneOnFile] = useState(false)
   const [address, setAddress] = useState({ name: '', line: '', area: '' })
-  const [paymentRef, setPaymentRef] = useState('')
+  const [proofFile, setProofFile] = useState<File | null>(null)
+  const [proofPreview, setProofPreview] = useState<string>('')
   const [placed, setPlaced] = useState(false)
 
   // Auth gate — guests must log in before checkout.
@@ -72,6 +75,28 @@ export default function CheckoutPage() {
       setChecking(false)
     })
   }, [router])
+
+  function onPickProof(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error('Screenshot is too large (max 8 MB)')
+      return
+    }
+    if (proofPreview) URL.revokeObjectURL(proofPreview)
+    setProofFile(file)
+    setProofPreview(URL.createObjectURL(file))
+  }
+
+  function clearProof() {
+    if (proofPreview) URL.revokeObjectURL(proofPreview)
+    setProofFile(null)
+    setProofPreview('')
+  }
 
   const deliveryFee = fulfillment === 'delivery' ? DELIVERY_FEE : 0
   const total = subtotal + SERVICE_FEE + deliveryFee
@@ -114,13 +139,27 @@ export default function CheckoutPage() {
       toast.error('Please complete the delivery address')
       return
     }
-    if (!paymentRef.trim()) {
-      toast.error('Please pay the 40% advance and enter the UPI reference number')
+    if (!proofFile) {
+      toast.error('Please pay the 40% advance and upload a payment screenshot')
       return
     }
 
     setSubmitting(true)
     const supabase = createClient()
+
+    // Upload the payment screenshot first; abort the order if it fails.
+    const ext = (proofFile.name.split('.').pop() || 'jpg').toLowerCase()
+    const proofPath = `${user.id}/${Date.now()}.${ext}`
+    const { error: uploadErr } = await supabase.storage
+      .from('payment-proofs')
+      .upload(proofPath, proofFile, { cacheControl: '3600', upsert: false })
+    if (uploadErr) {
+      setSubmitting(false)
+      toast.error(`Could not upload screenshot: ${uploadErr.message}`)
+      return
+    }
+    const payment_proof_url = supabase.storage.from('payment-proofs').getPublicUrl(proofPath).data
+      .publicUrl
 
     // Ensure a profile row exists — orders.customer_id has an FK to profiles.id.
     const { error: profileErr } = await supabase.from('profiles').upsert(
@@ -153,7 +192,7 @@ export default function CheckoutPage() {
         total,
         advance_amount: advance,
         payment_status: 'awaiting_verification',
-        payment_ref: paymentRef.trim(),
+        payment_proof_url,
       })
       .select('id')
       .single()
@@ -194,8 +233,8 @@ export default function CheckoutPage() {
           {fulfillment === 'pickup' ? 'Store Pickup' : 'Porter Delivery'}.
         </p>
         <p className="mt-3 text-xs text-white/40">
-          We&apos;ve recorded your {money(advance)} advance (ref {paymentRef.trim()}). The kitchen
-          will verify it and accept your order shortly.
+          We&apos;ve received your {money(advance)} advance screenshot. The kitchen will verify it
+          and accept your order shortly.
         </p>
         <Link
           href="/menu"
@@ -410,17 +449,31 @@ export default function CheckoutPage() {
             </div>
 
             <label className="mt-5 mb-1.5 block text-xs font-semibold text-white/60">
-              UPI reference / UTR number
+              Payment screenshot
             </label>
-            <input
-              value={paymentRef}
-              onChange={(e) => setPaymentRef(e.target.value)}
-              placeholder="e.g. 4163XXXXXXXX"
-              inputMode="numeric"
-              className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
-            />
+            {proofPreview ? (
+              <div className="relative overflow-hidden rounded-lg border border-white/10 bg-black/40">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={proofPreview} alt="Payment screenshot" className="max-h-64 w-full object-contain" />
+                <button
+                  type="button"
+                  onClick={clearProof}
+                  aria-label="Remove screenshot"
+                  className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/70 text-white/80 hover:text-white"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex h-28 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 bg-black/40 text-white/50 hover:border-[#d4af37]/50">
+                <Upload className="size-5" />
+                <span className="text-xs font-semibold">Tap to upload screenshot</span>
+                <span className="text-[10px] text-white/30">PNG or JPG · max 8 MB</span>
+                <input type="file" accept="image/*" onChange={onPickProof} className="hidden" />
+              </label>
+            )}
             <p className="mt-2 text-[11px] text-white/40">
-              Enter the 12-digit reference shown after payment. The kitchen verifies it before
+              Upload a screenshot of your {money(advance)} payment. The kitchen verifies it before
               accepting your order.
             </p>
           </div>

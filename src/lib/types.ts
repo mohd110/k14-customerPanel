@@ -17,6 +17,7 @@ export interface Product {
   price: number // stored in cents (e.g. 1250 = $12.50)
   photo_url: string | null
   is_available: boolean
+  stock?: number // inventory units; reduces as orders are placed
 }
 
 export interface DeliveryAddress {
@@ -44,6 +45,7 @@ export interface Order {
   advance_amount: number
   payment_status: PaymentStatus
   payment_ref: string | null
+  payment_proof_url: string | null
   created_at: string
   profiles?: Pick<Profile, 'full_name' | 'phone'>
   order_items?: OrderItem[]

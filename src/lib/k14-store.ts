@@ -49,6 +49,24 @@ export const useCart = create<CartState>()(
   )
 )
 
+// ── Selected menu date ────────────────────────────────
+// The menu is offered per delivery date; the chosen date is persisted
+// so it survives navigation (e.g. menu → cart → back).
+interface MenuDateState {
+  date: string | null // YYYY-MM-DD
+  setDate: (d: string | null) => void
+}
+
+export const useMenuDate = create<MenuDateState>()(
+  persist(
+    (set) => ({
+      date: null,
+      setDate: (date) => set({ date }),
+    }),
+    { name: 'k14-menu-date' }
+  )
+)
+
 // Guard against persisted-store hydration mismatches.
 export function useHydrated() {
   const [hydrated, setHydrated] = useState(false)

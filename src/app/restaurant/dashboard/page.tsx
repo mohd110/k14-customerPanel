@@ -15,6 +15,7 @@ export default async function DashboardPage() {
       advance_amount: 6,
       payment_status: 'awaiting_verification',
       payment_ref: '416312345678',
+      payment_proof_url: null,
       delivery_address: {
         name: 'Test Customer',
         phone: '123-456-7890',
