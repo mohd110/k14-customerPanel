@@ -67,12 +67,11 @@ export default function SignupPage() {
         <div className="flex flex-col items-center justify-center z-10 animate-in fade-in zoom-in-95 duration-500">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/k14-logo.svg"
-            alt="K14"
-            className="w-36 h-36 object-contain mb-6 animate-pulse drop-shadow-[0_8px_40px_rgba(226,55,68,0.25)]"
+            src="/k14-logo.png"
+            alt="K14 Bakers"
+            className="w-60 max-w-[80%] object-contain mb-4 drop-shadow-[0_8px_40px_rgba(226,55,68,0.25)]"
           />
 
-          <h2 className="text-3xl font-extrabold k14-gold-gradient tracking-tight">K14</h2>
           <p className="text-xs text-neutral-400 mt-1 font-semibold italic text-center">
             The taste worth gathering for
           </p>

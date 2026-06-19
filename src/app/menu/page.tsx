@@ -356,7 +356,8 @@ export default function MenuPage() {
 
       {/* ── Footer ── */}
       <footer className="mt-10 border-t border-white/10 px-6 py-8 text-center">
-        <h3 className="font-serif-display text-2xl font-bold k14-gold-gradient">k14</h3>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/k14-logo.png" alt="K14 Bakers" className="mx-auto w-28 object-contain opacity-90" />
         <div className="mx-auto mt-4 grid max-w-xs grid-cols-2 gap-2 text-[11px] text-white/40">
           <Link href="/" className="hover:text-white">Stories &amp; Info</Link>
           <Link href="/" className="hover:text-white">Help &amp; About</Link>

@@ -42,9 +42,8 @@ export default function SplashPage() {
 
         <div className="relative z-10 flex flex-col items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/k14/logo.png" alt="K14" className="h-20 w-20 object-contain drop-shadow-[0_8px_30px_rgba(212,175,55,0.3)]" />
-          <h1 className="mt-3 font-serif-display text-4xl font-bold k14-gold-gradient">k14</h1>
-          <p className="mt-2 text-xs text-white/60">Tabarruk at your doorstep</p>
+          <img src="/k14-logo.png" alt="K14 Bakers" className="w-60 max-w-[78%] object-contain drop-shadow-[0_8px_30px_rgba(212,175,55,0.3)]" />
+          <p className="mt-3 text-xs text-white/60">Tabarruk at your doorstep</p>
 
           <Link
             href="/login"
@@ -119,7 +118,8 @@ export default function SplashPage() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-white/10 px-6 py-8 text-center">
-        <h3 className="font-serif-display text-2xl font-bold k14-gold-gradient">k14</h3>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/k14-logo.png" alt="K14 Bakers" className="mx-auto w-28 object-contain opacity-90" />
         <div className="mx-auto mt-4 grid max-w-xs grid-cols-2 gap-2 text-[11px] text-white/40">
           <Link href="/menu" className="hover:text-white">Stories &amp; Info</Link>
           <Link href="/menu" className="hover:text-white">Help &amp; About</Link>

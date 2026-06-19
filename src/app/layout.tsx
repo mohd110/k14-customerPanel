@@ -17,8 +17,9 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'K14',
-  description: 'K14 — authentic flavors, delivered. Ya Hussain (عليه السلام).',
+  title: 'K14 Bakers',
+  description: 'K14 Bakers — Inspired by Lucknow, every bite a delight.',
+  icons: { icon: '/k14-logo.png', apple: '/k14-logo.png' },
 }
 
 export const viewport = {

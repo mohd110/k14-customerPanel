@@ -36,18 +36,13 @@ export default function WelcomePage() {
         {/* Logo */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/k14-logo.svg"
-          alt="K14"
-          className="w-44 h-44 object-contain mb-8 drop-shadow-[0_8px_40px_rgba(226,55,68,0.25)]"
+          src="/k14-logo.png"
+          alt="K14 Bakers"
+          className="w-72 max-w-[80%] object-contain mb-6 drop-shadow-[0_8px_40px_rgba(226,55,68,0.25)]"
         />
 
-        {/* Brand name */}
-        <h1 className="text-5xl font-extrabold k14-gold-gradient tracking-tight text-center">
-          K14
-        </h1>
-
         {/* Tagline */}
-        <p className="mt-3 text-base text-neutral-400 italic text-center font-medium">
+        <p className="mt-1 text-base text-neutral-400 italic text-center font-medium">
           The taste worth gathering for
         </p>
       </div>

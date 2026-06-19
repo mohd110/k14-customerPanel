@@ -74,9 +74,8 @@ function LoginInner() {
       <div className="flex flex-1 flex-col px-6 pb-8 -mt-10 relative z-10">
         {/* Brand */}
         <div className="flex flex-col items-center pb-6">
-          <h1 className="font-serif-display text-5xl font-bold tracking-tight k14-gold-gradient leading-none">
-            k14
-          </h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/k14-logo.png" alt="K14 Bakers" className="w-52 object-contain" />
           <p className="mt-2 text-[11px] font-semibold tracking-[0.35em] text-[#d4af37]/80">
             TABBRUK SERVICE
           </p>
