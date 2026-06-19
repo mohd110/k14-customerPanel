@@ -50,3 +50,27 @@ export function formatIso(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number)
   return describe(new Date(y, m - 1, d)).full
 }
+
+/**
+ * The Hijri (Islamic) date for a stored iso date, in English transliteration —
+ * e.g. "5 Muharram 1448 AH". Uses the Umm al-Qura calendar (the one used in
+ * Saudi Arabia). Shown alongside the Gregorian date for the community.
+ */
+export function hijriFromIso(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  try {
+    return new Intl.DateTimeFormat('en-GB-u-ca-islamic-umalqura', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(date)
+  } catch {
+    // Older runtimes without the Umm al-Qura calendar — fall back to plain islamic.
+    return new Intl.DateTimeFormat('en-GB-u-ca-islamic', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(date)
+  }
+}

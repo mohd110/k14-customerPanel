@@ -8,6 +8,7 @@ import { Order, OrderStatus } from '@/lib/types'
 import Link from 'next/link'
 import { ChevronLeft, Search, HelpCircle, Phone, MessageSquare, Star, Clock, Check, ChefHat, Bike, Compass } from 'lucide-react'
 import BottomNav from '@/components/BottomNav'
+import { orderNumber } from '@/lib/format'
 
 export default function OrderTrackingPage({
   params,
@@ -249,7 +250,7 @@ export default function OrderTrackingPage({
                 📄
               </div>
               <div>
-                <h4 className="text-xs font-extrabold text-white">Order #{id.slice(0, 8).toUpperCase()}</h4>
+                <h4 className="text-xs font-extrabold text-white break-all">Order {orderNumber(order)}</h4>
                 <p className="text-[10px] text-neutral-400 font-bold mt-0.5">
                   {itemsCount} {itemsCount === 1 ? 'item' : 'items'} &bull; ₹{order.total}
                 </p>

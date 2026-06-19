@@ -19,8 +19,9 @@ import {
 } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
-import { useCart, useHydrated, cartTotal } from '@/lib/k14-store'
+import { useCart, useHydrated, cartTotal, useMenuDate } from '@/lib/k14-store'
 import { money } from '@/lib/format'
+import { formatIso, hijriFromIso } from '@/lib/dates'
 import PaymentQR from '@/components/PaymentQR'
 
 type Fulfillment = 'pickup' | 'delivery'
@@ -41,6 +42,8 @@ export default function CheckoutPage() {
   const hydrated = useHydrated()
   const { items, clear } = useCart()
   const subtotal = hydrated ? cartTotal(items) : 0
+  // Delivery date the customer chose on the menu page — carried over here.
+  const menuDate = useMenuDate((s) => s.date)
 
   const [user, setUser] = useState<User | null>(null)
   const [checking, setChecking] = useState(true)
@@ -51,7 +54,9 @@ export default function CheckoutPage() {
   const [time, setTime] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [altPhone, setAltPhone] = useState('')
   const [phoneOnFile, setPhoneOnFile] = useState(false)
+  const [orderCode, setOrderCode] = useState('')
   const [address, setAddress] = useState({ name: '', line: '', area: '' })
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [proofPreview, setProofPreview] = useState<string>('')
@@ -75,6 +80,12 @@ export default function CheckoutPage() {
       setChecking(false)
     })
   }, [router])
+
+  // Auto-fetch the delivery date chosen on the menu page. Only prefill while
+  // the field is still empty so we never clobber a manual change here.
+  useEffect(() => {
+    if (menuDate) setDate((prev) => prev || menuDate)
+  }, [menuDate])
 
   function onPickProof(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -178,10 +189,11 @@ export default function CheckoutPage() {
       return
     }
 
+    const altPhoneVal = altPhone.trim() || undefined
     const delivery_address =
       fulfillment === 'delivery'
-        ? { fulfillment, date, time, phone: phone.trim(), name: address.name || name.trim(), address: address.line, area: address.area }
-        : { fulfillment, date, time, phone: phone.trim(), name: name.trim(), store: STORE_ADDRESS }
+        ? { fulfillment, date, time, phone: phone.trim(), alt_phone: altPhoneVal, name: address.name || name.trim(), address: address.line, area: address.area }
+        : { fulfillment, date, time, phone: phone.trim(), alt_phone: altPhoneVal, name: name.trim(), store: STORE_ADDRESS }
 
     const { data: order, error: orderErr } = await supabase
       .from('orders')
@@ -194,7 +206,7 @@ export default function CheckoutPage() {
         payment_status: 'awaiting_verification',
         payment_proof_url,
       })
-      .select('id')
+      .select('id, order_code')
       .single()
 
     if (orderErr || !order) {
@@ -202,6 +214,7 @@ export default function CheckoutPage() {
       toast.error(orderErr?.message ?? 'Could not place order')
       return
     }
+    setOrderCode(order.order_code ?? '')
 
     const { error: itemsErr } = await supabase.from('order_items').insert(
       items.map(({ item, qty }) => ({
@@ -228,6 +241,11 @@ export default function CheckoutPage() {
       <div className="phone-screen flex min-h-[100dvh] flex-col items-center justify-center bg-[#0e0b08] px-8 text-center text-white">
         <CheckCircle2 className="size-16 text-[#d4af37]" />
         <h1 className="mt-5 font-serif-display text-2xl font-bold k14-gold-gradient">Khidmah Confirmed</h1>
+        {orderCode && (
+          <p className="mt-3 rounded-lg border border-[#d4af37]/30 bg-[#d4af37]/10 px-3 py-1.5 font-mono text-xs font-bold tracking-wide text-[#d4af37]">
+            {orderCode}
+          </p>
+        )}
         <p className="mt-2 text-sm text-white/60">
           Your tabarruk order is booked for {date} at {time} ·{' '}
           {fulfillment === 'pickup' ? 'Store Pickup' : 'Porter Delivery'}.
@@ -286,8 +304,15 @@ export default function CheckoutPage() {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="mb-4 h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white outline-none focus:border-[#d4af37]/50 [color-scheme:dark]"
+              className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white outline-none focus:border-[#d4af37]/50 [color-scheme:dark]"
             />
+            {date && (
+              <p className="mb-4 mt-1.5 flex items-baseline gap-1.5 px-1 text-xs">
+                <span className="text-white/50">{formatIso(date)}</span>
+                <span className="font-semibold text-[#e23744]">{hijriFromIso(date)}</span>
+              </p>
+            )}
+            {!date && <div className="mb-4" />}
             <label className="mb-2 flex items-center gap-2 text-xs font-semibold text-white/60">
               <Clock className="size-4" /> Time slot
             </label>
@@ -328,9 +353,22 @@ export default function CheckoutPage() {
             <label className="mb-1.5 block text-xs font-semibold text-white/60">Phone</label>
             <input
               type="tel"
+              inputMode="numeric"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Enter your phone number"
+              autoComplete="tel"
+              className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
+            />
+            <label className="mb-1.5 mt-4 block text-xs font-semibold text-white/60">
+              Alternate phone <span className="text-white/30">(optional)</span>
+            </label>
+            <input
+              type="tel"
+              inputMode="numeric"
+              value={altPhone}
+              onChange={(e) => setAltPhone(e.target.value)}
+              placeholder="Another number we can reach you on"
               autoComplete="tel"
               className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
             />

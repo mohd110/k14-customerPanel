@@ -10,7 +10,6 @@ import {
   ClipboardList,
   User,
   Plus,
-  Minus,
   X,
   Loader2,
   CalendarDays,
@@ -22,7 +21,7 @@ import type { Product } from '@/lib/types'
 import { useCart, useHydrated, cartCount, useMenuDate } from '@/lib/k14-store'
 import { money } from '@/lib/format'
 import { placeholderImage } from '@/lib/placeholder-image'
-import { upcomingDates, formatIso, minMenuIso, type DateOption } from '@/lib/dates'
+import { upcomingDates, formatIso, hijriFromIso, minMenuIso, type DateOption } from '@/lib/dates'
 
 function ItemCard({
   item,
@@ -30,21 +29,24 @@ function ItemCard({
   available = true,
 }: {
   item: Product
-  onAdd: (item: Product) => void
+  onAdd: (item: Product, qty: number) => void
   available?: boolean
 }) {
+  // Plain quantity field — the customer types the number directly (numpad).
+  const [qtyText, setQtyText] = useState('1')
+  const qty = Math.max(1, parseInt(qtyText, 10) || 1)
   return (
     <div
       className={`overflow-hidden rounded-2xl border border-white/10 bg-[#17120c] ${
         available ? '' : 'opacity-80'
       }`}
     >
-      <div className="relative h-44 w-full overflow-hidden bg-black/30">
+      <div className="relative aspect-square w-full overflow-hidden bg-white">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={item.photo_url || placeholderImage(item.name)}
           alt={item.name}
-          className={`h-full w-full object-cover transition-all ${
+          className={`h-full w-full object-contain transition-all ${
             available ? '' : 'grayscale'
           }`}
         />
@@ -65,12 +67,29 @@ function ItemCard({
         <p className="mt-1 text-xs leading-relaxed text-white/50">{item.description}</p>
 
         {available ? (
-          <button
-            onClick={() => onAdd(item)}
-            className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-xs font-bold text-[#1a1206] transition-transform active:scale-[0.98]"
-          >
-            <Plus className="size-4" /> Add to Tabarruk
-          </button>
+          <div className="mt-4 flex items-stretch gap-2">
+            <div className="flex shrink-0 flex-col items-center">
+              <label className="mb-1 text-[9px] font-bold tracking-[0.15em] text-[#d4af37]/70">
+                QTY
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                aria-label={`Quantity for ${item.name}`}
+                value={qtyText}
+                onChange={(e) => setQtyText(e.target.value.replace(/[^0-9]/g, ''))}
+                onBlur={() => setQtyText(String(qty))}
+                className="h-11 w-16 rounded-lg border border-white/15 bg-black/30 text-center text-base font-bold text-white outline-none focus:border-[#d4af37]/60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+              />
+            </div>
+            <button
+              onClick={() => onAdd(item, qty)}
+              className="mt-[18px] flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-xs font-bold text-[#1a1206] transition-transform active:scale-[0.98]"
+            >
+              <Plus className="size-4" /> Add to Tabarruk
+            </button>
+          </div>
         ) : (
           <button
             disabled
@@ -79,96 +98,6 @@ function ItemCard({
             Out of stock on this date
           </button>
         )}
-      </div>
-    </div>
-  )
-}
-
-function QtyModal({
-  item,
-  onClose,
-  onConfirm,
-}: {
-  item: Product
-  onClose: () => void
-  onConfirm: (item: Product, qty: number) => void
-}) {
-  const [qty, setQty] = useState(1)
-  const [qtyText, setQtyText] = useState('1')
-  const setBoth = (n: number) => {
-    setQty(n)
-    setQtyText(String(n))
-  }
-  const dec = () => setBoth(Math.max(1, qty - 1))
-  const inc = () => setBoth(qty + 1)
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="phone-screen w-full rounded-t-3xl border-t border-[#d4af37]/20 bg-[#17120c] p-6 pb-8 animate-in slide-in-from-bottom duration-200"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-5 flex items-start gap-3">
-          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-black/30">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={item.photo_url || placeholderImage(item.name)}
-              alt={item.name}
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-serif-display text-lg font-bold text-white">{item.name}</h3>
-            <span className="text-sm font-bold text-[#d4af37]">{money(item.price)} each</span>
-          </div>
-          <button onClick={onClose} aria-label="Close" className="text-white/40 hover:text-white">
-            <X className="size-5" />
-          </button>
-        </div>
-
-        <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-[#d4af37]/80">
-          QUANTITY
-        </label>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 rounded-xl border border-white/15 px-2 py-2">
-            <button onClick={dec} aria-label="Decrease" className="flex size-9 items-center justify-center rounded-lg bg-white/5 text-white/80 hover:bg-white/10">
-              <Minus className="size-4" />
-            </button>
-            <input
-              type="number"
-              min={1}
-              value={qtyText}
-              onChange={(e) => {
-                const raw = e.target.value.replace(/[^0-9]/g, '')
-                setQtyText(raw)
-                const n = parseInt(raw, 10)
-                if (!Number.isNaN(n)) setQty(Math.max(1, n))
-              }}
-              onBlur={() => {
-                const n = parseInt(qtyText, 10)
-                setBoth(Number.isNaN(n) ? 1 : Math.max(1, n))
-              }}
-              className="w-14 bg-transparent text-center text-lg font-bold text-white outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
-            />
-            <button onClick={inc} aria-label="Increase" className="flex size-9 items-center justify-center rounded-lg bg-white/5 text-white/80 hover:bg-white/10">
-              <Plus className="size-4" />
-            </button>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] tracking-[0.15em] text-white/40">TOTAL</p>
-            <p className="text-xl font-bold text-[#d4af37]">{money(item.price * qty)}</p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => onConfirm(item, qty)}
-          className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-sm font-bold text-[#1a1206] transition-transform active:scale-[0.98]"
-        >
-          <ShoppingBag className="size-4" /> Add to Cart
-        </button>
       </div>
     </div>
   )
@@ -227,6 +156,9 @@ function DateSheet({
                   <div>
                     <p className="text-sm font-semibold text-white">{d.weekday}</p>
                     <p className="text-xs text-white/45">{d.full}</p>
+                    <p className="text-[11px] font-semibold text-[#e23744]">
+                      {hijriFromIso(d.iso)}
+                    </p>
                   </div>
                 </div>
                 {active && <Check className="size-5 text-[#d4af37]" />}
@@ -240,7 +172,6 @@ function DateSheet({
 }
 
 export default function MenuPage() {
-  const [modalItem, setModalItem] = useState<Product | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [availableIds, setAvailableIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
@@ -307,7 +238,6 @@ export default function MenuPage() {
 
   const confirmAdd = (item: Product, qty: number) => {
     add(item, qty)
-    setModalItem(null)
     toast.success(`${qty} × ${item.name} added`)
   }
 
@@ -325,8 +255,15 @@ export default function MenuPage() {
             <span className="block text-[8px] font-bold tracking-[0.15em] text-[#d4af37]/70">
               DELIVERY DATE
             </span>
-            <span className="block text-sm font-bold text-white">
-              {selectedDate ? formatIso(selectedDate) : 'Select date'}
+            <span className="flex items-baseline gap-1.5">
+              <span className="text-sm font-bold text-white">
+                {selectedDate ? formatIso(selectedDate) : 'Select date'}
+              </span>
+              {selectedDate && (
+                <span className="text-[11px] font-semibold text-[#e23744]">
+                  {hijriFromIso(selectedDate)}
+                </span>
+              )}
             </span>
           </div>
           <ChevronDown className="size-3.5 shrink-0 text-white/50" />
@@ -408,7 +345,7 @@ export default function MenuPage() {
                 <ItemCard
                   key={item.id}
                   item={item}
-                  onAdd={setModalItem}
+                  onAdd={confirmAdd}
                   available={isAvailable(item)}
                 />
               ))}
@@ -460,11 +397,6 @@ export default function MenuPage() {
           }}
           onClose={() => setDateOpen(false)}
         />
-      )}
-
-      {/* ── Qty popup ── */}
-      {modalItem && (
-        <QtyModal item={modalItem} onClose={() => setModalItem(null)} onConfirm={confirmAdd} />
       )}
     </div>
   )

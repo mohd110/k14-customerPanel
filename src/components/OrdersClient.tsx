@@ -6,6 +6,7 @@ import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { Order, OrderStatus } from '@/lib/types'
 import Link from 'next/link'
 import { CheckCircle, ChefHat, Bike, Package, Clock, ArrowRight, ThumbsUp } from 'lucide-react'
+import { orderNumber } from '@/lib/format'
 
 interface Props {
   initialOrders: Order[]
@@ -112,7 +113,7 @@ export default function OrdersClient({ initialOrders, userId }: Props) {
             {/* Header */}
             <div className="px-4 pt-4 flex items-start justify-between">
               <div>
-                <p className="text-xs font-bold text-[#ffffff] font-mono">#{order.id.slice(0, 8).toUpperCase()}</p>
+                <p className="text-xs font-bold text-[#ffffff] font-mono break-all">{orderNumber(order)}</p>
                 <p className="text-[10px] text-[#b5b5b5] mt-0.5 flex items-center gap-1">
                   <Clock className="size-3" />
                   {new Date(order.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}

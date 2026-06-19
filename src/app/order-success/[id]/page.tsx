@@ -22,7 +22,7 @@ export default async function OrderSuccessPage({
 
   if (!order) notFound()
 
-  const shortId = `#${id.slice(0, 8).toUpperCase()}`
+  const shortId = order.order_code || `#${id.slice(0, 8).toUpperCase()}`
   const addr = order.delivery_address as { address?: string; name?: string; payment?: string } | null
   const paymentLabel = addr?.payment === 'card' ? 'Credit/Debit Card' : 'Cash on Delivery'
 

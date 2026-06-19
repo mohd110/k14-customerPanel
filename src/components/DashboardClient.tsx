@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import OrderStatusBadge from './OrderStatusBadge'
 import { toast } from 'sonner'
 import { MapPin, Phone } from 'lucide-react'
+import { orderNumber } from '@/lib/format'
 
 const paymentBadge: Record<PaymentStatus, { label: string; cls: string }> = {
   awaiting_verification: { label: 'Advance: unverified', cls: 'bg-yellow-500/15 text-yellow-400' },
@@ -128,8 +129,8 @@ export default function DashboardClient({ initialOrders }: Props) {
             {/* Header */}
             <div className="px-4 pt-4 pb-3">
               <div className="flex justify-between items-start mb-1">
-                <p className="font-mono font-semibold text-sm text-white">
-                  #{order.id.slice(0, 8).toUpperCase()}
+                <p className="font-mono font-semibold text-sm text-white break-all">
+                  {orderNumber(order)}
                 </p>
                 <span className="font-bold text-orange-600">₹{order.total}</span>
               </div>
@@ -167,6 +168,12 @@ export default function DashboardClient({ initialOrders }: Props) {
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Phone className="size-3" />
                     {(order as any).profiles.full_name} · {(order as any).profiles.phone}
+                  </p>
+                )}
+                {address?.alt_phone && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Phone className="size-3" />
+                    Alt: {address.alt_phone}
                   </p>
                 )}
                 {address?.address && (

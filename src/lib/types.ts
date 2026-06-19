@@ -23,6 +23,7 @@ export interface Product {
 export interface DeliveryAddress {
   name: string
   phone: string
+  alt_phone?: string
   address: string
   pincode: string
 }
@@ -38,6 +39,8 @@ export interface OrderItem {
 
 export interface Order {
   id: string
+  order_code?: string | null // human reference, e.g. "k14/LKO/19062026/OR-3"
+  order_seq?: number | null // per-delivery-date serial
   customer_id: string
   status: OrderStatus
   delivery_address: DeliveryAddress
