@@ -21,7 +21,7 @@ import type { Product } from '@/lib/types'
 import { useCart, useHydrated, cartCount, useMenuDate } from '@/lib/k14-store'
 import { money } from '@/lib/format'
 import { placeholderImage } from '@/lib/placeholder-image'
-import { upcomingDates, formatIso, hijriFromIso, minMenuIso, type DateOption } from '@/lib/dates'
+import { upcomingDatesThrough, endOfAugustIso, formatIso, hijriFromIso, minMenuIso, type DateOption } from '@/lib/dates'
 
 function ItemCard({
   item,
@@ -65,6 +65,20 @@ function ItemCard({
           <span className="shrink-0 font-bold text-[#d4af37]">{money(item.price)}</span>
         </div>
         <p className="mt-1 text-xs leading-relaxed text-white/50">{item.description}</p>
+
+        {available && (
+          <p
+            className={`mt-2 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold tracking-[0.08em] ${
+              (item.stock ?? 0) <= 10
+                ? 'bg-[#e23744]/15 text-[#f08089]'
+                : 'bg-[#d4af37]/12 text-[#d4af37]'
+            }`}
+          >
+            {(item.stock ?? 0) <= 10
+              ? `Only ${item.stock} left for this date`
+              : `${item.stock} left for this date`}
+          </p>
+        )}
 
         {available ? (
           <div className="mt-4 flex items-stretch gap-2">
@@ -185,7 +199,7 @@ export default function MenuPage() {
 
   const selectedDate = useMenuDate((s) => s.date)
   const setSelectedDate = useMenuDate((s) => s.setDate)
-  const dateOptions = upcomingDates(14)
+  const dateOptions = upcomingDatesThrough(endOfAugustIso())
 
   // Discard a persisted date that is now in the past (e.g. returning days later).
   useEffect(() => {

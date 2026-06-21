@@ -45,6 +45,34 @@ export function upcomingDates(count = 14, startOffset = 1): DateOption[] {
   return out
 }
 
+/** 31 Aug as YYYY-MM-DD — this year, or next year if August has already passed. */
+export function endOfAugustIso(): string {
+  const now = new Date()
+  const year = now.getMonth() > 7 ? now.getFullYear() + 1 : now.getFullYear()
+  return `${year}-08-31`
+}
+
+/**
+ * Selectable dates from `startOffset` days out through `endIso` (inclusive).
+ * Used to open ordering for every date up to the end of August.
+ */
+export function upcomingDatesThrough(endIso: string, startOffset = 1): DateOption[] {
+  const [ey, em, ed] = endIso.split('-').map(Number)
+  const end = new Date(ey, em - 1, ed)
+  end.setHours(0, 0, 0, 0)
+
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() + startOffset)
+
+  const out: DateOption[] = []
+  while (d <= end) {
+    out.push(describe(new Date(d)))
+    d.setDate(d.getDate() + 1)
+  }
+  return out
+}
+
 /** Human label for a stored iso date, e.g. "Thu, 18 Jun". */
 export function formatIso(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number)

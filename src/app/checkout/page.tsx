@@ -26,7 +26,6 @@ import PaymentQR from '@/components/PaymentQR'
 
 type Fulfillment = 'pickup' | 'delivery'
 
-const TIME_SLOTS = ['10:00 AM', '12:30 PM', '03:00 PM', '06:30 PM', '08:00 PM']
 const STORE_ADDRESS = 'Hussainabad Food Court'
 const SERVICE_FEE = 20 // rupees
 const DELIVERY_FEE = 40 // rupees
@@ -52,6 +51,7 @@ export default function CheckoutPage() {
   const [fulfillment, setFulfillment] = useState<Fulfillment>('pickup')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
+  const [note, setNote] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [altPhone, setAltPhone] = useState('')
@@ -205,6 +205,7 @@ export default function CheckoutPage() {
         advance_amount: advance,
         payment_status: 'awaiting_verification',
         payment_proof_url,
+        note: note.trim() || null,
       })
       .select('id, order_code')
       .single()
@@ -248,7 +249,7 @@ export default function CheckoutPage() {
         )}
         <p className="mt-2 text-sm text-white/60">
           Your tabarruk order is booked for {date} at {time} ·{' '}
-          {fulfillment === 'pickup' ? 'Store Pickup' : 'Porter Delivery'}.
+          {fulfillment === 'pickup' ? 'Store Pickup' : 'Home Delivery'}.
         </p>
         <p className="mt-3 text-xs text-white/40">
           We&apos;ve received your {money(advance)} advance screenshot. The kitchen will verify it
@@ -313,24 +314,36 @@ export default function CheckoutPage() {
               </p>
             )}
             {!date && <div className="mb-4" />}
-            <label className="mb-2 flex items-center gap-2 text-xs font-semibold text-white/60">
-              <Clock className="size-4" /> Time slot
+            <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-white/60">
+              <Clock className="size-4" /> Preferred time
             </label>
-            <div className="flex flex-wrap gap-2">
-              {TIME_SLOTS.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTime(t)}
-                  className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
-                    time === t
-                      ? 'bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-[#1a1206]'
-                      : 'border border-white/15 text-white/60 hover:text-white'
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white outline-none focus:border-[#d4af37]/50 [color-scheme:dark]"
+            />
+            <p className="mt-1.5 px-1 text-[11px] text-white/40">
+              Enter any time that suits you for pickup or delivery.
+            </p>
+          </div>
+        </section>
+
+        {/* Order note (optional) */}
+        <section>
+          <h2 className="mb-3 flex items-center gap-2 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">
+            ORDER NOTE
+            <span className="text-[9px] text-white/30">OPTIONAL</span>
+          </h2>
+          <div className="rounded-2xl border border-white/10 bg-[#17120c] p-4">
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+              maxLength={500}
+              placeholder="Any special instructions for the kitchen — e.g. less sugar, packaging, landmark, majlis timing…"
+              className="w-full resize-none rounded-lg border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
+            />
           </div>
         </section>
 
@@ -405,7 +418,7 @@ export default function CheckoutPage() {
               }`}
             >
               <Truck className={`size-6 ${fulfillment === 'delivery' ? 'text-[#d4af37]' : 'text-white/60'}`} />
-              <span className="text-sm font-bold">Porter Delivery</span>
+              <span className="text-sm font-bold">Home Delivery</span>
               <span className="text-[10px] text-white/40">{money(DELIVERY_FEE)} · To your door</span>
             </button>
           </div>
@@ -519,7 +532,7 @@ export default function CheckoutPage() {
 
         {fulfillment === 'delivery' && (
           <p className="px-1 text-center text-[11px] text-white/40">
-            Note: Porter delivery charges will be added afterwards.
+            Note: Home delivery charges will be added afterwards.
           </p>
         )}
       </div>

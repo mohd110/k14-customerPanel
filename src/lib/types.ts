@@ -45,6 +45,7 @@ export interface Order {
   status: OrderStatus
   delivery_address: DeliveryAddress
   total: number
+  note?: string | null // optional customer instructions captured at checkout
   advance_amount: number
   payment_status: PaymentStatus
   payment_ref: string | null
