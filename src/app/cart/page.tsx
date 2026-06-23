@@ -1,9 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Minus, Plus, Trash2, ArrowRight, ShoppingBag } from 'lucide-react'
+import { ChevronLeft, Minus, Plus, Trash2, ArrowRight, ShoppingBag, Loader2 } from 'lucide-react'
 import { useCart, useHydrated, cartTotal } from '@/lib/k14-store'
+import { createClient } from '@/lib/supabase/client'
 import { money } from '@/lib/format'
 import { placeholderImage } from '@/lib/placeholder-image'
 
@@ -16,6 +18,20 @@ export default function CartPage() {
   const subtotal = hydrated ? cartTotal(items) : 0
   const fee = items.length > 0 ? SERVICE_FEE : 0
   const total = subtotal + fee
+  const [proceeding, setProceeding] = useState(false)
+
+  // Guests browse and build a cart freely — we only ask them to log in once
+  // they tap "Proceed to Checkout". Logged-in users go straight to checkout.
+  async function proceedToCheckout() {
+    setProceeding(true)
+    const supabase = createClient()
+    const { data } = await supabase.auth.getUser()
+    if (!data.user) {
+      router.push('/login?redirect=/checkout')
+      return
+    }
+    router.push('/checkout')
+  }
 
   return (
     <div className="phone-screen min-h-[100dvh] bg-[#0e0b08] pb-32 text-white">
@@ -104,10 +120,15 @@ export default function CartPage() {
           {/* Proceed */}
           <div className="phone-screen fixed inset-x-0 bottom-0 z-30 mx-auto border-t border-white/10 bg-[#120d08]/95 px-5 py-4 pb-safe backdrop-blur">
             <button
-              onClick={() => router.push('/checkout')}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-sm font-bold text-[#1a1206] transition-transform active:scale-[0.98]"
+              onClick={proceedToCheckout}
+              disabled={proceeding}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-sm font-bold text-[#1a1206] transition-transform active:scale-[0.98] disabled:opacity-60"
             >
-              Proceed to Checkout <ArrowRight className="size-4" />
+              {proceeding ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <>Proceed to Checkout <ArrowRight className="size-4" /></>
+              )}
             </button>
           </div>
         </>

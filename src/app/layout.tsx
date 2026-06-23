@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 import { Providers } from '@/components/providers'
+import BackgroundMusic from '@/components/BackgroundMusic'
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: '--font-plus-jakarta',
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-black">
         <Providers>
           {children}
+          <BackgroundMusic />
           <Toaster richColors position="bottom-center" duration={1500} />
         </Providers>
       </body>

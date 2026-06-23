@@ -51,7 +51,7 @@ export default function WelcomePage() {
       <div className="px-6 pb-12 flex flex-col items-center gap-6 relative z-10">
         {/* CTA Button */}
         <Link
-          href="/login"
+          href="/menu"
           className="w-full h-14 bg-[#e23744] hover:bg-[#c52d39] text-white font-bold text-base rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-[#e23744]/30"
           style={{
             opacity: mounted ? 1 : 0,
