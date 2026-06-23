@@ -195,3 +195,26 @@ html {
 /* Hide scrollbar for horizontal scroll */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* iOS Safari sizing fix for native date/time fields.
+   By default iOS gives these inputs an intrinsic min-width and extra
+   -webkit padding, so a w-full field spills past its container on the right.
+   Reset the appearance and let them size to the box. */
+input[type="date"],
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0;
+}
+/* Keep the calendar/clock picker icon from being clipped or pushed out. */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  margin-left: auto;
+}

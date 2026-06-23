@@ -79,26 +79,52 @@ export function formatIso(iso: string): string {
   return describe(new Date(y, m - 1, d)).full
 }
 
+// ── Hijri (Islamic) date — Muharram only ───────────────────────────────────
+// This is a Muharram-only Tabarruk service, so we only ever surface the
+// Muharram day count. Rather than rely on Intl's `islamic-umalqura` calendar —
+// which some clients (older Android WebViews / iOS) don't support and silently
+// fall back to Gregorian or the day-off `islamic-civil`, giving wrong or
+// inconsistent dates across phones — we embed the exact Umm al-Qura start day
+// and length of Muharram for each year. This yields the *same*, correct result
+// on every device (so e.g. Ashura always lands on the right day).
+//
+// Table keyed by Hijri year → [Julian Day Number of 1 Muharram, days in Muharram].
+// Generated from the Umm al-Qura calendar; covers 1447–1461 AH (≈ 2025–2039).
+const MUHARRAM_TABLE: Record<number, [start: number, days: number]> = {
+  1447: [2460853, 30], 1448: [2461208, 29], 1449: [2461563, 29], 1450: [2461917, 30],
+  1451: [2462271, 30], 1452: [2462626, 30], 1453: [2462980, 30], 1454: [2463334, 30],
+  1455: [2463689, 29], 1456: [2464044, 29], 1457: [2464398, 30], 1458: [2464753, 29],
+  1459: [2465107, 29], 1460: [2465461, 29], 1461: [2465815, 29],
+}
+
+/** Gregorian calendar date → Julian Day Number. */
+function gregorianToJDN(year: number, month: number, day: number): number {
+  const a = Math.floor((14 - month) / 12)
+  const y = year + 4800 - a
+  const m = month + 12 * a - 3
+  return (
+    day +
+    Math.floor((153 * m + 2) / 5) +
+    365 * y +
+    Math.floor(y / 4) -
+    Math.floor(y / 100) +
+    Math.floor(y / 400) -
+    32045
+  )
+}
+
 /**
- * The Hijri (Islamic) date for a stored iso date, in English transliteration —
- * e.g. "5 Muharram 1448 AH". Uses the Umm al-Qura calendar (the one used in
- * Saudi Arabia). Shown alongside the Gregorian date for the community.
+ * The Hijri date for a stored iso date, in English transliteration —
+ * e.g. "5 Muharram 1448 AH". Returns an empty string for any date that does
+ * NOT fall in Muharram.
  */
 export function hijriFromIso(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  try {
-    return new Intl.DateTimeFormat('en-GB-u-ca-islamic-umalqura', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(date)
-  } catch {
-    // Older runtimes without the Umm al-Qura calendar — fall back to plain islamic.
-    return new Intl.DateTimeFormat('en-GB-u-ca-islamic', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(date)
+  const jdn = gregorianToJDN(y, m, d)
+  for (const [yearStr, [start, days]] of Object.entries(MUHARRAM_TABLE)) {
+    if (jdn >= start && jdn < start + days) {
+      return `${jdn - start + 1} Muharram ${yearStr} AH`
+    }
   }
+  return '' // not Muharram (or outside the table's year range)
 }

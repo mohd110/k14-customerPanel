@@ -170,9 +170,11 @@ function DateSheet({
                   <div>
                     <p className="text-sm font-semibold text-white">{d.weekday}</p>
                     <p className="text-xs text-white/45">{d.full}</p>
-                    <p className="text-[11px] font-semibold text-[#e23744]">
-                      {hijriFromIso(d.iso)}
-                    </p>
+                    {hijriFromIso(d.iso) && (
+                      <p className="text-[11px] font-semibold text-[#e23744]">
+                        {hijriFromIso(d.iso)}
+                      </p>
+                    )}
                   </div>
                 </div>
                 {active && <Check className="size-5 text-[#d4af37]" />}
@@ -273,7 +275,7 @@ export default function MenuPage() {
               <span className="text-sm font-bold text-white">
                 {selectedDate ? formatIso(selectedDate) : 'Select date'}
               </span>
-              {selectedDate && (
+              {selectedDate && hijriFromIso(selectedDate) && (
                 <span className="text-[11px] font-semibold text-[#e23744]">
                   {hijriFromIso(selectedDate)}
                 </span>

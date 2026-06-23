@@ -310,7 +310,9 @@ export default function CheckoutPage() {
             {date && (
               <p className="mb-4 mt-1.5 flex items-baseline gap-1.5 px-1 text-xs">
                 <span className="text-white/50">{formatIso(date)}</span>
-                <span className="font-semibold text-[#e23744]">{hijriFromIso(date)}</span>
+                {hijriFromIso(date) && (
+                  <span className="font-semibold text-[#e23744]">{hijriFromIso(date)}</span>
+                )}
               </p>
             )}
             {!date && <div className="mb-4" />}
