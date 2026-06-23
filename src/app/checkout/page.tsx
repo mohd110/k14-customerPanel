@@ -27,6 +27,7 @@ import PaymentQR from '@/components/PaymentQR'
 type Fulfillment = 'pickup' | 'delivery'
 
 const STORE_ADDRESS = 'Hussainabad Food Court'
+const TIME_SLOTS = ['10:00 AM', '01:00 PM', '04:00 PM', '07:00 PM']
 const SERVICE_FEE = 20 // rupees
 const DELIVERY_FEE = 40 // rupees
 
@@ -316,18 +317,24 @@ export default function CheckoutPage() {
               </p>
             )}
             {!date && <div className="mb-4" />}
-            <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-white/60">
-              <Clock className="size-4" /> Preferred time
+            <label className="mb-2 flex items-center gap-2 text-xs font-semibold text-white/60">
+              <Clock className="size-4" /> Time slot
             </label>
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white outline-none focus:border-[#d4af37]/50 [color-scheme:dark]"
-            />
-            <p className="mt-1.5 px-1 text-[11px] text-white/40">
-              Enter any time that suits you for pickup or delivery.
-            </p>
+            <div className="flex flex-wrap gap-2">
+              {TIME_SLOTS.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTime(t)}
+                  className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
+                    time === t
+                      ? 'bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-[#1a1206]'
+                      : 'border border-white/15 text-white/60 hover:text-white'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
