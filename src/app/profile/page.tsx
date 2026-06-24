@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { MapPin, Search, ChevronRight, CreditCard, History, HelpCircle, LogOut, X, Phone, User as UserIcon, Mail } from 'lucide-react'
+import { MapPin, Search, ChevronRight, History, HelpCircle, LogOut, X, Phone, User as UserIcon, Mail } from 'lucide-react'
 import BottomNav from '@/components/BottomNav'
 import { toast } from 'sonner'
 
@@ -17,11 +17,12 @@ export default function ProfilePage() {
   // Edit Profile modal state
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
   const [editPhone, setEditPhone] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // Custom modal states
-  const [activeModal, setActiveModal] = useState<'payment' | 'support' | null>(null)
+  // Support modal
+  const [activeModal, setActiveModal] = useState<'support' | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -46,14 +47,16 @@ export default function ProfilePage() {
         .select('*', { count: 'exact', head: true })
         .eq('customer_id', currentUser.id)
 
+      // No mock fallbacks — only show what the account actually has.
       const finalProfile = profileData || {
-        full_name: currentUser.user_metadata?.full_name || 'Elena Rodriguez',
-        email: currentUser.email,
-        phone: currentUser.user_metadata?.phone || '+1 (555) 012-3456',
+        full_name: currentUser.user_metadata?.full_name || '',
+        email: currentUser.email || '',
+        phone: currentUser.user_metadata?.phone || currentUser.phone || '',
       }
 
       setProfile(finalProfile)
       setEditName(finalProfile.full_name || '')
+      setEditEmail(finalProfile.email || '')
       setEditPhone(finalProfile.phone || '')
       setOrderCount(count || 0)
       setLoading(false)
@@ -80,27 +83,28 @@ export default function ProfilePage() {
     const supabase = createClient()
 
     try {
-      // Upsert profile in Supabase
       const { error } = await supabase
         .from('profiles')
         .upsert({
           id: user.id,
           role: 'customer',
           full_name: editName.trim(),
-          email: user.email,
+          email: editEmail.trim(),
           phone: editPhone.trim(),
         })
 
       if (error) throw error
 
-      // Update Auth metadata to sync values
+      // Sync name/phone to auth metadata (email stays on the profile row to
+      // avoid triggering a confirmation flow for phone-login accounts).
       await supabase.auth.updateUser({
-        data: { full_name: editName.trim(), phone: editPhone.trim() }
+        data: { full_name: editName.trim(), phone: editPhone.trim() },
       })
 
       setProfile((prev: any) => ({
         ...prev,
         full_name: editName.trim(),
+        email: editEmail.trim(),
         phone: editPhone.trim(),
       }))
       setIsEditing(false)
@@ -121,20 +125,11 @@ export default function ProfilePage() {
     )
   }
 
-  const fullName = profile?.full_name || 'Elena Rodriguez'
-  const email = profile?.email || user?.email || 'elena.rodriguez@example.com'
-  const phone = profile?.phone || '+1 (555) 012-3456'
-
-  // Dynamic loyalty tier logic
-  let loyaltyTier = 'Bronze Foodie'
-  let tierColor = 'text-[#e23744] bg-[#1c1c1c]'
-  if (orderCount >= 10) {
-    loyaltyTier = 'Gold Gourmet'
-    tierColor = 'text-[#d4af37] bg-[#2a2410] border border-[#3a3420]'
-  } else if (orderCount >= 5) {
-    loyaltyTier = 'Silver Connoisseur'
-    tierColor = 'text-neutral-300 bg-neutral-900 border border-neutral-800'
-  }
+  // Real values only — empty string means "not provided yet".
+  const fullName = (profile?.full_name || '').trim()
+  const email = (profile?.email || user?.email || '').trim()
+  const phone = (profile?.phone || user?.user_metadata?.phone || user?.phone || '').trim()
+  const initial = fullName ? fullName.charAt(0).toUpperCase() : ''
 
   return (
     <div className="min-h-[100dvh] phone-screen flex flex-col bg-[#0a0a0a] text-white pb-safe relative">
@@ -142,7 +137,7 @@ export default function ProfilePage() {
       <header className="bg-neutral-900 sticky top-0 z-40 px-4 h-14 flex items-center justify-between border-b border-neutral-800">
         <div className="flex items-center gap-2 text-[#e23744]">
           <MapPin className="size-5" />
-          <span className="font-extrabold text-sm text-neutral-100">Tasty Food</span>
+          <span className="font-extrabold text-sm text-neutral-100">K14 Bakers</span>
         </div>
         <button className="p-1 cursor-pointer">
           <Search className="size-5 text-neutral-200" />
@@ -151,47 +146,74 @@ export default function ProfilePage() {
 
       {/* Scrollable Content */}
       <div className="flex-grow overflow-y-auto pb-24">
-        
+
         {/* Profile Card Info */}
         <div className="flex flex-col items-center pt-6 pb-5">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-orange-100 flex items-center justify-center text-5xl shadow-md border-2 border-white select-none">
-              👩‍🦰
+            <div className="w-24 h-24 rounded-full bg-neutral-800 flex items-center justify-center shadow-md border-2 border-neutral-700 select-none">
+              {initial ? (
+                <span className="text-4xl font-extrabold text-[#e23744]">{initial}</span>
+              ) : (
+                <UserIcon className="size-10 text-neutral-500" />
+              )}
             </div>
             {/* Edit pencil badge */}
-            <button 
+            <button
               onClick={() => setIsEditing(true)}
-              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#e23744] text-white flex items-center justify-center shadow-md cursor-pointer border-2 border-white hover:bg-[#c52d39] transition-colors"
+              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#e23744] text-white flex items-center justify-center shadow-md cursor-pointer border-2 border-[#0a0a0a] hover:bg-[#c52d39] transition-colors"
             >
               <svg className="size-3.5 fill-white" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M7.127 22.564l-5.127 1.436 1.436-5.127 12.192-12.192 3.691 3.691-12.192 12.192zm14.288-14.288l-2.485-2.485 1.586-1.586 2.485 2.485-1.586 1.586z"/>
               </svg>
             </button>
           </div>
-          <h2 className="text-lg font-extrabold text-white mt-4 leading-tight">
-            {fullName}
-          </h2>
-          <p className="text-xs text-neutral-400 font-medium mt-1">
-            {email}
-          </p>
-          <div className={`mt-2.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide ${tierColor}`}>
-            {loyaltyTier} • {phone}
-          </div>
+
+          {/* Name */}
+          {fullName ? (
+            <h2 className="text-lg font-extrabold text-white mt-4 leading-tight">{fullName}</h2>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="mt-4 text-sm font-bold text-[#e23744] hover:underline"
+            >
+              + Add your name
+            </button>
+          )}
+
+          {/* Email */}
+          {email ? (
+            <p className="text-xs text-neutral-400 font-medium mt-1">{email}</p>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="text-xs text-neutral-500 font-medium mt-1 hover:text-neutral-300"
+            >
+              + Add your email
+            </button>
+          )}
+
+          {/* Phone */}
+          {phone ? (
+            <div className="mt-2.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide text-[#e23744] bg-[#1c1c1c]">
+              {phone}
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="mt-2.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide text-neutral-400 bg-[#1c1c1c] hover:text-neutral-200"
+            >
+              + Add your phone
+            </button>
+          )}
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-3 px-4 mb-5">
-          <div className="bg-neutral-900 rounded-2xl p-3 text-center shadow-[0_2px_8px_rgba(0,0,0,0.01)] border border-neutral-800/50 flex flex-col justify-center">
-            <span className="text-base font-extrabold text-[#e23744]">{orderCount}</span>
-            <span className="text-[9px] font-bold text-neutral-400 tracking-wider uppercase mt-0.5">Orders</span>
-          </div>
-          <div className="bg-neutral-900 rounded-2xl p-3 text-center shadow-[0_2px_8px_rgba(0,0,0,0.01)] border border-neutral-800/50 flex flex-col justify-center">
-            <span className="text-base font-extrabold text-[#e23744]">{orderCount * 50 || 150}</span>
-            <span className="text-[9px] font-bold text-neutral-400 tracking-wider uppercase mt-0.5">Points</span>
-          </div>
-          <div className="bg-neutral-900 rounded-2xl p-3 text-center shadow-[0_2px_8px_rgba(0,0,0,0.01)] border border-neutral-800/50 flex flex-col justify-center">
-            <span className="text-base font-extrabold text-[#e23744]">3</span>
-            <span className="text-[9px] font-bold text-neutral-400 tracking-wider uppercase mt-0.5">Coupons</span>
+        {/* Orders stat (real) */}
+        <div className="px-4 mb-5">
+          <div className="bg-neutral-900 rounded-2xl p-4 text-center border border-neutral-800/50 flex flex-col justify-center">
+            <span className="text-2xl font-extrabold text-[#e23744]">{orderCount}</span>
+            <span className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase mt-0.5">
+              {orderCount === 1 ? 'Order' : 'Orders'}
+            </span>
           </div>
         </div>
 
@@ -199,7 +221,6 @@ export default function ProfilePage() {
         <div className="px-4 space-y-2.5 mb-6">
           {[
             { label: 'Saved Addresses', icon: MapPin, color: 'bg-[#2a1416] text-[#e23744] border-[#3a1f22]/20', href: '/location' },
-            { label: 'Payment Methods', icon: CreditCard, color: 'bg-blue-50 text-blue-600 border-blue-100/20', onClick: () => setActiveModal('payment') },
             { label: 'Order History', icon: History, color: 'bg-[#2a2410] text-amber-600 border-[#3a3420]/20', href: '/orders' },
             { label: 'Help & Support', icon: HelpCircle, color: 'bg-cyan-50 text-cyan-600 border-cyan-100/20', onClick: () => setActiveModal('support') },
             { label: 'Logout', icon: LogOut, color: 'bg-[#2a1416] text-[#e23744] border-[#3a1f22]/20', onClick: handleLogout },
@@ -212,7 +233,7 @@ export default function ProfilePage() {
                   if (opt.onClick) opt.onClick()
                   else if (opt.href && opt.href !== '#') router.push(opt.href)
                 }}
-                className="bg-neutral-900 rounded-2xl p-3 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.01)] border border-neutral-800/50 cursor-pointer hover:bg-neutral-900 active:scale-[0.99] transition-all"
+                className="bg-neutral-900 rounded-2xl p-3 flex items-center justify-between border border-neutral-800/50 cursor-pointer hover:bg-neutral-800/40 active:scale-[0.99] transition-all"
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border ${opt.color}`}>
@@ -226,29 +247,6 @@ export default function ProfilePage() {
           })}
         </div>
 
-        {/* Refer a Friend Banner */}
-        <div className="mx-4 bg-[#e23744] rounded-3xl p-5 flex items-center justify-between text-white relative overflow-hidden shadow-md shadow-[#e23744]/15">
-          <div className="space-y-2 max-w-[65%] z-10">
-            <h3 className="text-sm font-extrabold">Refer a friend</h3>
-            <p className="text-[10px] text-white/80 leading-normal font-semibold">
-              Give ₹100, get ₹100. Spread the love for K14!
-            </p>
-            <button 
-              onClick={() => toast.success('Referral code copied to clipboard!')}
-              className="h-8 px-4 bg-neutral-900 text-[#e23744] text-[10px] font-extrabold rounded-xl shadow-sm cursor-pointer mt-1 hover:bg-[#2a1416] transition-colors"
-            >
-              Invite Friends
-            </button>
-          </div>
-          
-          {/* Giftbox Icon Illustration */}
-          <div className="absolute right-3 bottom-0 w-24 h-24 text-white/10 flex items-center justify-center pointer-events-none scale-110 z-0 select-none">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-              <path d="M20 8.5v12c0 .825-.675 1.5-1.5 1.5h-13c-.825 0-1.5-.675-1.5-1.5v-12h16zm-3.5-6c1.1 0 2 .9 2 2 0 .5-.175.95-.475 1.3.175.25.325.525.425.825L19 7h3v1.5H2v-1.5h3l.55-1.375c.1-.3.25-.575.425-.825C5.675 5.45 5.5 5 5.5 4c0-1.1.9-2 2-2 1.35 0 2.45.9 2.875 2.125L12 5.5l1.625-1.375C14.05 2.9 15.15 2 16.5 2zM8 8.5H3.5v12H8v-12zm6.5 0H9.5v12h5v-12zM20.5 8.5H16v12h4.5v-12zM7.5 3.5c-.275 0-.5.225-.5.5s.225.5.5.5h1.7l-.3-1c-.1-.55-.6-.9-1.2-.9zm9 0c-.6 0-1.1.35-1.2.9l-.3 1h1.7c.275 0 .5-.225.5-.5s-.225-.5-.5-.5z"/>
-            </svg>
-          </div>
-        </div>
-
       </div>
 
       {/* ── Edit Profile Modal ── */}
@@ -257,7 +255,7 @@ export default function ProfilePage() {
           <div className="bg-neutral-900 w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-neutral-800 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
               <h3 className="text-base font-extrabold text-white">Edit Profile</h3>
-              <button 
+              <button
                 onClick={() => setIsEditing(false)}
                 className="p-1 rounded-full hover:bg-neutral-800 transition-colors cursor-pointer"
               >
@@ -274,9 +272,23 @@ export default function ProfilePage() {
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 bg-neutral-900 border border-neutral-700 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#e23744] focus:bg-neutral-900 transition-all"
+                    className="w-full h-11 pl-10 pr-4 bg-neutral-900 border border-neutral-700 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#e23744] transition-all"
                     placeholder="Enter your name"
                     required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-neutral-400" />
+                  <input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="w-full h-11 pl-10 pr-4 bg-neutral-900 border border-neutral-700 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#e23744] transition-all"
+                    placeholder="Enter your email"
                   />
                 </div>
               </div>
@@ -289,7 +301,7 @@ export default function ProfilePage() {
                     type="tel"
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 bg-neutral-900 border border-neutral-700 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#e23744] focus:bg-neutral-900 transition-all"
+                    className="w-full h-11 pl-10 pr-4 bg-neutral-900 border border-neutral-700 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#e23744] transition-all"
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -316,15 +328,13 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ── Mock Details Modal (Payments / Support) ── */}
-      {activeModal && (
+      {/* ── Help & Support Modal ── */}
+      {activeModal === 'support' && (
         <div className="absolute inset-0 bg-black/60 z-50 flex items-end justify-center transition-all duration-300">
           <div className="bg-neutral-900 w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-neutral-800 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-              <h3 className="text-base font-extrabold text-white">
-                {activeModal === 'payment' ? 'Payment Methods' : 'Help & Support'}
-              </h3>
-              <button 
+              <h3 className="text-base font-extrabold text-white">Help & Support</h3>
+              <button
                 onClick={() => setActiveModal(null)}
                 className="p-1 rounded-full hover:bg-neutral-800 transition-colors cursor-pointer"
               >
@@ -332,82 +342,16 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            {activeModal === 'payment' ? (
-              <div className="space-y-4">
-                {/* Visual Premium Cards */}
-                <div className="space-y-3">
-                  <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-4 rounded-2xl text-white relative overflow-hidden shadow-md">
-                    <div className="absolute right-4 top-4 font-bold text-sm tracking-widest text-white/50">VISA</div>
-                    <div className="text-[10px] text-white/60 tracking-wider uppercase">Saved Card</div>
-                    <div className="text-xs font-bold tracking-widest mt-4">•••• •••• •••• 4242</div>
-                    <div className="flex justify-between items-end mt-4">
-                      <div>
-                        <div className="text-[8px] text-white/40 uppercase">Card Holder</div>
-                        <div className="text-[10px] font-bold">{fullName}</div>
-                      </div>
-                      <div className="text-[10px] font-bold">12/28</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3.5 bg-neutral-900 border border-neutral-700/60 rounded-2xl cursor-pointer hover:bg-neutral-800/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">G</div>
-                      <div>
-                        <div className="text-xs font-bold text-neutral-100">Google Pay</div>
-                        <div className="text-[9px] text-neutral-400">Connected</div>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-extrabold text-[#e23744]">Primary</span>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => toast.info('Payment integration coming soon!')}
-                  className="w-full h-11 border-2 border-dashed border-neutral-700 text-neutral-400 text-xs font-bold rounded-2xl flex items-center justify-center hover:bg-neutral-900 cursor-pointer transition-colors mt-2"
-                >
-                  + Add New Payment Method
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-xs text-neutral-400 leading-relaxed font-semibold">
-                  Need help with an order, account settings, or payments? Our 24/7 support team is here to assist.
-                </p>
-
-                <div className="space-y-2">
-                  <button 
-                    onClick={() => toast.success('Connecting to chat support...')}
-                    className="w-full h-11 bg-[#1c1c1c] hover:bg-[#2a1416] text-[#e23744] text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                  >
-                    💬 Live Chat Support
-                  </button>
-                  
-                  <a 
-                    href="tel:+15550123456" 
-                    className="w-full h-11 border border-neutral-700 hover:bg-neutral-900 text-neutral-200 text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                  >
-                    📞 Call Us (+1 (555) 012-3456)
-                  </a>
-
-                  <a 
-                    href="mailto:support@walibabafoods.com" 
-                    className="w-full h-11 border border-neutral-700 hover:bg-neutral-900 text-neutral-200 text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                  >
-                    ✉️ Email Support
-                  </a>
-                </div>
-
-                <div className="bg-neutral-900 p-3.5 rounded-2xl border border-neutral-700/60 mt-2">
-                  <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wide mb-1">Frequently Asked</div>
-                  <div className="text-xs font-bold text-neutral-200 hover:text-[#e23744] cursor-pointer py-1 border-b border-neutral-700/40">
-                    How do I cancel my order?
-                  </div>
-                  <div className="text-xs font-bold text-neutral-200 hover:text-[#e23744] cursor-pointer py-1 pt-2">
-                    What is K14's refund policy?
-                  </div>
-                </div>
-              </div>
-            )}
+            <p className="text-xs text-neutral-400 leading-relaxed font-semibold">
+              Need help with an order? Reach out to the K14 kitchen and the team
+              will assist you.
+            </p>
+            <button
+              onClick={() => toast.info('Support contact coming soon')}
+              className="w-full h-11 bg-[#1c1c1c] hover:bg-[#2a1416] text-[#e23744] text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
+            >
+              Contact Support
+            </button>
           </div>
         </div>
       )}

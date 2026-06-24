@@ -56,7 +56,6 @@ export default function CheckoutPage() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [altPhone, setAltPhone] = useState('')
-  const [phoneOnFile, setPhoneOnFile] = useState(false)
   const [orderCode, setOrderCode] = useState('')
   const [address, setAddress] = useState({ name: '', line: '', area: '' })
   const [proofFile, setProofFile] = useState<File | null>(null)
@@ -74,10 +73,9 @@ export default function CheckoutPage() {
       setUser(data.user)
       // Prefill name from the account if available.
       setName(((data.user.user_metadata?.full_name as string) || '').trim())
-      // Prefill phone if the account already has one; otherwise it's required below.
+      // Phone comes from login (it's the account identifier) — carried into the order.
       const existingPhone = (data.user.phone || (data.user.user_metadata?.phone as string) || '').trim()
       setPhone(existingPhone)
-      setPhoneOnFile(!!existingPhone)
       setChecking(false)
     })
   }, [router])
@@ -372,17 +370,7 @@ export default function CheckoutPage() {
               autoComplete="name"
               className="mb-4 h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
             />
-            <label className="mb-1.5 block text-xs font-semibold text-white/60">Phone</label>
-            <input
-              type="tel"
-              inputMode="numeric"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Enter your phone number"
-              autoComplete="tel"
-              className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
-            />
-            <label className="mb-1.5 mt-4 block text-xs font-semibold text-white/60">
+            <label className="mb-1.5 block text-xs font-semibold text-white/60">
               Alternate phone <span className="text-white/30">(optional)</span>
             </label>
             <input
@@ -394,11 +382,6 @@ export default function CheckoutPage() {
               autoComplete="tel"
               className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
             />
-            {!phoneOnFile && (
-              <p className="mt-2 text-[11px] text-white/40">
-                No phone on your account — please add one to confirm the order.
-              </p>
-            )}
           </div>
         </section>
 

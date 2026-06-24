@@ -33,8 +33,16 @@ function ItemCard({
   available?: boolean
 }) {
   // Plain quantity field — the customer types the number directly (numpad).
-  const [qtyText, setQtyText] = useState('1')
-  const qty = Math.max(1, parseInt(qtyText, 10) || 1)
+  // Starts empty (shows "--") so nothing is pre-filled; they must enter a qty.
+  const [qtyText, setQtyText] = useState('')
+  const qty = Math.max(0, parseInt(qtyText, 10) || 0)
+  const handleAdd = () => {
+    if (qty < 1) {
+      toast.error('Enter a quantity first')
+      return
+    }
+    onAdd(item, qty)
+  }
   return (
     <div
       className={`overflow-hidden rounded-2xl border border-white/10 bg-[#17120c] ${
@@ -92,13 +100,14 @@ function ItemCard({
                 pattern="[0-9]*"
                 aria-label={`Quantity for ${item.name}`}
                 value={qtyText}
+                placeholder="--"
                 onChange={(e) => setQtyText(e.target.value.replace(/[^0-9]/g, ''))}
-                onBlur={() => setQtyText(String(qty))}
-                className="h-11 w-16 rounded-lg border border-white/15 bg-black/30 text-center text-base font-bold text-white outline-none focus:border-[#d4af37]/60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                onBlur={() => setQtyText(qty > 0 ? String(qty) : '')}
+                className="h-11 w-16 rounded-lg border border-white/15 bg-black/30 text-center text-base font-bold text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
             <button
-              onClick={() => onAdd(item, qty)}
+              onClick={handleAdd}
               className="mt-[18px] flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-xs font-bold text-[#1a1206] transition-transform active:scale-[0.98]"
             >
               <Plus className="size-4" /> Add to Tabarruk
