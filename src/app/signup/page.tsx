@@ -111,9 +111,9 @@ export default function SignupPage() {
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/k14-logo.svg"
+            src="/k14-logo.png"
             alt="K14"
-            className="w-24 h-24 object-contain drop-shadow-2xl"
+            className="w-28 object-contain drop-shadow-2xl"
           />
         </div>
       </div>
