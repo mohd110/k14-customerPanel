@@ -21,6 +21,8 @@ import type { Product } from '@/lib/types'
 import { useCart, useHydrated, cartCount, useMenuDate } from '@/lib/k14-store'
 import { money } from '@/lib/format'
 import { placeholderImage } from '@/lib/placeholder-image'
+import { galleryFor, GALLERY_CAPTIONS } from '@/lib/product-gallery'
+import ProductImageSlider from '@/components/ProductImageSlider'
 import { upcomingDatesThrough, endOfAugustIso, formatIso, hijriFromIso, minMenuIso, type DateOption } from '@/lib/dates'
 
 function ItemCard({
@@ -43,29 +45,39 @@ function ItemCard({
     }
     onAdd(item, qty)
   }
+  const gallery = galleryFor(item.id)
   return (
     <div
       className={`overflow-hidden rounded-2xl border border-white/10 bg-[#17120c] ${
         available ? '' : 'opacity-80'
       }`}
     >
-      <div className="relative aspect-square w-full overflow-hidden bg-white">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={item.photo_url || placeholderImage(item.name)}
+      {gallery ? (
+        <ProductImageSlider
+          images={gallery}
+          captions={GALLERY_CAPTIONS}
           alt={item.name}
-          className={`h-full w-full object-contain transition-all ${
-            available ? '' : 'grayscale'
-          }`}
+          available={available}
         />
-        {!available && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <span className="rounded-md border border-white/30 bg-black/70 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white">
-              Out of stock
-            </span>
-          </div>
-        )}
-      </div>
+      ) : (
+        <div className="relative aspect-square w-full overflow-hidden bg-white">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={item.photo_url || placeholderImage(item.name)}
+            alt={item.name}
+            className={`h-full w-full object-contain transition-all ${
+              available ? '' : 'grayscale'
+            }`}
+          />
+          {!available && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <span className="rounded-md border border-white/30 bg-black/70 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white">
+                Out of stock
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">

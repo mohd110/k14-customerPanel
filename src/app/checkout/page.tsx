@@ -16,6 +16,8 @@ import {
   QrCode,
   Upload,
   X,
+  ShoppingBag,
+  Package,
 } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
@@ -25,11 +27,18 @@ import { formatIso, hijriFromIso } from '@/lib/dates'
 import PaymentQR from '@/components/PaymentQR'
 
 type Fulfillment = 'pickup' | 'delivery'
+type Packing = 'none' | 'bag' | 'box'
 
 const STORE_ADDRESS = 'Hussainabad Food Court'
 const TIME_SLOTS = ['10:00 AM', '01:00 PM', '04:00 PM', '07:00 PM']
 const SERVICE_FEE = 20 // rupees
 const DELIVERY_FEE = 40 // rupees
+
+// Optional packing add-on chosen at checkout.
+const BAG_FEE = 10 // rupees — carry bag
+const BOX_FEE = 30 // rupees — sturdy gift box
+const PACKING_FEE: Record<Packing, number> = { none: 0, bag: BAG_FEE, box: BOX_FEE }
+const PACKING_LABEL: Record<Packing, string> = { none: 'No packing', bag: 'Carry bag', box: 'Gift box' }
 
 // Advance payment collected up front before the order is confirmed.
 const ADVANCE_RATE = 0.4 // 40%
@@ -50,6 +59,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false)
 
   const [fulfillment, setFulfillment] = useState<Fulfillment>('pickup')
+  const [packing, setPacking] = useState<Packing>('none')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [note, setNote] = useState('')
@@ -109,7 +119,8 @@ export default function CheckoutPage() {
   }
 
   const deliveryFee = fulfillment === 'delivery' ? DELIVERY_FEE : 0
-  const total = subtotal + SERVICE_FEE + deliveryFee
+  const packingFee = PACKING_FEE[packing]
+  const total = subtotal + SERVICE_FEE + deliveryFee + packingFee
   const advance = Math.round(total * ADVANCE_RATE)
   const balance = total - advance
   // UPI deep link — scanning opens the customer's banking app with payee + amount pre-filled.
@@ -189,10 +200,11 @@ export default function CheckoutPage() {
     }
 
     const altPhoneVal = altPhone.trim() || undefined
+    const packingInfo = { packing, packing_label: PACKING_LABEL[packing], packing_fee: packingFee }
     const delivery_address =
       fulfillment === 'delivery'
-        ? { fulfillment, date, time, phone: phone.trim(), alt_phone: altPhoneVal, name: address.name || name.trim(), address: address.line, area: address.area }
-        : { fulfillment, date, time, phone: phone.trim(), alt_phone: altPhoneVal, name: name.trim(), store: STORE_ADDRESS }
+        ? { fulfillment, date, time, phone: phone.trim(), alt_phone: altPhoneVal, name: address.name || name.trim(), address: address.line, area: address.area, ...packingInfo }
+        : { fulfillment, date, time, phone: phone.trim(), alt_phone: altPhoneVal, name: name.trim(), store: STORE_ADDRESS, ...packingInfo }
 
     const { data: order, error: orderErr } = await supabase
       .from('orders')
@@ -449,6 +461,46 @@ export default function CheckoutPage() {
           )}
         </section>
 
+        {/* Packing */}
+        <section>
+          <h2 className="mb-3 flex items-center gap-2 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">
+            PACKING
+            <span className="text-[9px] text-white/30">OPTIONAL</span>
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              onClick={() => setPacking('none')}
+              className={`flex flex-col items-center gap-2 rounded-2xl border p-4 transition-colors ${
+                packing === 'none' ? 'border-[#d4af37] bg-[#d4af37]/10' : 'border-white/10 bg-[#17120c]'
+              }`}
+            >
+              <X className={`size-6 ${packing === 'none' ? 'text-[#d4af37]' : 'text-white/60'}`} />
+              <span className="text-sm font-bold">None</span>
+              <span className="text-[10px] text-white/40">Free</span>
+            </button>
+            <button
+              onClick={() => setPacking('bag')}
+              className={`flex flex-col items-center gap-2 rounded-2xl border p-4 transition-colors ${
+                packing === 'bag' ? 'border-[#d4af37] bg-[#d4af37]/10' : 'border-white/10 bg-[#17120c]'
+              }`}
+            >
+              <ShoppingBag className={`size-6 ${packing === 'bag' ? 'text-[#d4af37]' : 'text-white/60'}`} />
+              <span className="text-sm font-bold">Bag</span>
+              <span className="text-[10px] text-white/40">+{money(BAG_FEE)}</span>
+            </button>
+            <button
+              onClick={() => setPacking('box')}
+              className={`flex flex-col items-center gap-2 rounded-2xl border p-4 transition-colors ${
+                packing === 'box' ? 'border-[#d4af37] bg-[#d4af37]/10' : 'border-white/10 bg-[#17120c]'
+              }`}
+            >
+              <Package className={`size-6 ${packing === 'box' ? 'text-[#d4af37]' : 'text-white/60'}`} />
+              <span className="text-sm font-bold">Box</span>
+              <span className="text-[10px] text-white/40">+{money(BOX_FEE)}</span>
+            </button>
+          </div>
+        </section>
+
         {/* Totals */}
         <section className="rounded-2xl border border-white/10 bg-[#17120c] p-4 text-sm">
           <div className="flex justify-between text-white/60">
@@ -463,6 +515,12 @@ export default function CheckoutPage() {
             <span>{fulfillment === 'delivery' ? 'Delivery fee' : 'Pickup'}</span>
             <span>{deliveryFee ? money(deliveryFee) : 'Free'}</span>
           </div>
+          {packing !== 'none' && (
+            <div className="mt-2 flex justify-between text-white/60">
+              <span>Packing ({PACKING_LABEL[packing]})</span>
+              <span>{money(packingFee)}</span>
+            </div>
+          )}
           <div className="mt-3 flex justify-between border-t border-white/10 pt-3 text-base font-bold">
             <span>Total</span>
             <span className="text-[#d4af37]">{money(total)}</span>
