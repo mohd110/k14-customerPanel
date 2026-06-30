@@ -33,12 +33,10 @@ export default function WelcomePage() {
           transition: 'opacity 0.6s ease, transform 0.6s ease',
         }}
       >
-        {/* Logo */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/k14-logo.png"
-          alt="K14 Bakers"
-          className="w-72 max-w-[80%] object-contain mb-6 drop-shadow-[0_8px_40px_rgba(226,55,68,0.25)]"
+          src="/new-logo.jpeg"
+          alt="BookMyTabarruk"
+          className="w-56 h-56 object-contain mb-6 drop-shadow-2xl"
         />
 
         {/* Tagline */}

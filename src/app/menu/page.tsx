@@ -18,11 +18,12 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Product } from '@/lib/types'
-import { useCart, useHydrated, cartCount, useMenuDate } from '@/lib/k14-store'
+import { useCart, useHydrated, cartCount, useMenuDate, useActiveStore } from '@/lib/k14-store'
 import { money } from '@/lib/format'
 import { placeholderImage } from '@/lib/placeholder-image'
 import { galleryFor, GALLERY_CAPTIONS } from '@/lib/product-gallery'
 import ProductImageSlider from '@/components/ProductImageSlider'
+import BottomNav from '@/components/BottomNav'
 import { upcomingDatesThrough, endOfAugustIso, formatIso, hijriFromIso, minMenuIso, type DateOption } from '@/lib/dates'
 
 function ItemCard({
@@ -219,12 +220,14 @@ export default function MenuPage() {
   const add = useCart((s) => s.add)
   const hydrated = useHydrated()
   const count = hydrated ? cartCount(items) : 0
+  const activeStoreId = useActiveStore((s) => s.storeId)
+  const activeStoreSlug = useActiveStore((s) => s.storeSlug)
+  const activeStore = { id: activeStoreId, slug: activeStoreSlug }
 
   const selectedDate = useMenuDate((s) => s.date)
   const setSelectedDate = useMenuDate((s) => s.setDate)
   const dateOptions = upcomingDatesThrough(endOfAugustIso())
 
-  // Discard a persisted date that is now in the past (e.g. returning days later).
   useEffect(() => {
     if (selectedDate && selectedDate < minMenuIso()) setSelectedDate(null)
   }, [selectedDate, setSelectedDate])
@@ -234,9 +237,6 @@ export default function MenuPage() {
     supabase.auth.getUser().then(({ data }: { data: { user: unknown | null } }) => setLoggedIn(!!data.user))
   }, [])
 
-  // Load the full menu, plus which items are available on the selected date.
-  // Items that aren't available that day are still shown — greyed out and
-  // marked "Out of stock" — rather than hidden.
   useEffect(() => {
     if (!selectedDate) {
       setProducts([])
@@ -245,28 +245,18 @@ export default function MenuPage() {
     }
     setLoading(true)
     const supabase = createClient()
+    const query = supabase.from('products').select('*').eq('is_available', true)
+    if (activeStoreId) query.eq('store_id', activeStoreId)
     Promise.all([
-      supabase
-        .from('products')
-        .select('*')
-        .eq('is_available', true)
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('product_availability')
-        .select('product_id')
-        .eq('available_date', selectedDate),
-    ]).then(
-      ([prodRes, availRes]: [
-        { data: Product[] | null; error: unknown },
-        { data: { product_id: string }[] | null; error: unknown },
-      ]) => {
-        if (prodRes.error) toast.error('Could not load menu')
-        else setProducts(prodRes.data ?? [])
-        setAvailableIds(new Set((availRes.data ?? []).map((r) => r.product_id)))
-        setLoading(false)
-      }
-    )
-  }, [selectedDate])
+      query.order('created_at', { ascending: true }),
+      supabase.from('product_availability').select('product_id').eq('available_date', selectedDate),
+    ]).then(([prodRes, availRes]) => {
+      if (prodRes.error) toast.error('Could not load menu')
+      else setProducts(prodRes.data ?? [])
+      setAvailableIds(new Set((availRes.data ?? []).map((r: any) => r.product_id)))
+      setLoading(false)
+    })
+  }, [selectedDate, activeStoreId])
 
   // Available on the selected date only if it's offered that day AND in stock.
   // Stock is reduced as orders come in, so a sold-out item shows "Out of stock".
@@ -393,36 +383,11 @@ export default function MenuPage() {
 
       {/* ── Footer ── */}
       <footer className="mt-10 border-t border-white/10 px-6 py-8 text-center">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/k14-logo.png" alt="K14 Bakers" className="mx-auto w-28 object-contain opacity-90" />
-        <div className="mx-auto mt-4 grid max-w-xs grid-cols-2 gap-2 text-[11px] text-white/40">
-          <Link href="/" className="hover:text-white">Stories &amp; Info</Link>
-          <Link href="/" className="hover:text-white">Help &amp; About</Link>
-          <Link href="/" className="hover:text-white">Customer</Link>
-          <Link href="/" className="hover:text-white">Support</Link>
-        </div>
+        <p className="text-sm font-bold text-emerald-400">Book My Tabarruk</p>
+        <p className="mt-1 text-[11px] text-white/40">Serving the community with dignity and devotion.</p>
       </footer>
 
-      {/* ── Bottom nav ── */}
-      <nav className="phone-screen fixed inset-x-0 bottom-0 z-30 mx-auto flex items-center justify-around border-t border-white/10 bg-[#120d08]/95 px-2 py-3 pb-safe backdrop-blur">
-        {[
-          { icon: UtensilsCrossed, label: 'Menu', href: '/menu', active: true },
-          { icon: ShoppingBag, label: 'Cart', href: '/cart', active: false },
-          { icon: ClipboardList, label: 'Orders', href: loggedIn ? '/orders' : '/login', active: false },
-          { icon: User, label: 'Profile', href: loggedIn ? '/profile' : '/login', active: false },
-        ].map(({ icon: Icon, label, href, active }) => (
-          <Link
-            key={label}
-            href={href}
-            className={`flex flex-col items-center gap-1 text-[10px] font-semibold ${
-              active ? 'text-[#d4af37]' : 'text-white/45'
-            }`}
-          >
-            <Icon className="size-5" />
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <BottomNav />
 
       {/* ── Date picker ── */}
       {dateOpen && (

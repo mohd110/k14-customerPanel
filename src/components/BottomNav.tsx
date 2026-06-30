@@ -2,35 +2,47 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, ShoppingBag, User } from 'lucide-react'
+import { Store, ShoppingBag, History, User } from 'lucide-react'
+import { useCart, useHydrated, cartCount } from '@/lib/k14-store'
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const items = useCart((s) => s.items)
+  const hydrated = useHydrated()
+  const count = hydrated ? cartCount(items) : 0
 
   const tabs = [
-    { href: '/menu', icon: Home, label: 'Home' },
-    { href: '/orders', icon: ShoppingBag, label: 'Orders' },
-    { href: '/profile', icon: User, label: 'Profile' },
+    { href: '/stores', icon: Store, label: 'Stores', id: 'nav-stores' },
+    { href: '/cart', icon: ShoppingBag, label: 'Cart', id: 'nav-cart' },
+    { href: '/orders', icon: History, label: 'Orders', id: 'nav-orders' },
+    { href: '/profile', icon: User, label: 'Profile', id: 'nav-profile' },
   ]
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-neutral-900 border-t border-neutral-800 z-40 shadow-[0_-2px_16px_rgba(0,0,0,0.06)]">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-[#0a1208] border-t border-emerald-900/40 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
       <div className="flex pb-safe">
-        {tabs.map(({ href, icon: Icon, label }) => {
-          const active = pathname === href || pathname.startsWith(href + '/')
+        {tabs.map(({ href, icon: Icon, label, id }) => {
+          const active = pathname === href || (href !== '/stores' && pathname.startsWith(href + '/'))
           return (
             <Link
               key={href}
+              id={id}
               href={href}
               className="flex-1 flex flex-col items-center py-3 gap-0.5 transition-colors"
             >
-              <div className={`w-10 h-6 flex items-center justify-center rounded-full transition-colors ${active ? 'bg-[#2a1416]' : ''}`}>
+              <div className={`relative w-10 h-6 flex items-center justify-center rounded-full transition-colors ${active ? 'bg-[#d4af37]/15' : ''}`}>
                 <Icon
-                  className={`size-5 transition-colors ${active ? 'text-[#e23744]' : 'text-neutral-400'}`}
+                  className={`size-5 transition-colors ${active ? 'text-[#d4af37]' : 'text-neutral-400'}`}
                   strokeWidth={active ? 2.5 : 1.8}
                 />
+                {/* Cart badge */}
+                {href === '/cart' && count > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#d4af37] px-1 text-[9px] font-bold text-[#1a1206]">
+                    {count}
+                  </span>
+                )}
               </div>
-              <span className={`text-[10px] font-semibold transition-colors ${active ? 'text-[#e23744]' : 'text-neutral-400'}`}>
+              <span className={`text-[10px] font-semibold transition-colors ${active ? 'text-[#d4af37]' : 'text-neutral-500'}`}>
                 {label}
               </span>
             </Link>

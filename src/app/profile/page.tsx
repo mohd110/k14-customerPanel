@@ -47,7 +47,6 @@ export default function ProfilePage() {
         .select('*', { count: 'exact', head: true })
         .eq('customer_id', currentUser.id)
 
-      // No mock fallbacks — only show what the account actually has.
       const finalProfile = profileData || {
         full_name: currentUser.user_metadata?.full_name || '',
         email: currentUser.email || '',
@@ -95,8 +94,6 @@ export default function ProfilePage() {
 
       if (error) throw error
 
-      // Sync name/phone to auth metadata (email stays on the profile row to
-      // avoid triggering a confirmation flow for phone-login accounts).
       await supabase.auth.updateUser({
         data: { full_name: editName.trim(), phone: editPhone.trim() },
       })
@@ -118,26 +115,25 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] phone-screen flex flex-col items-center justify-center bg-[#0a0a0a]">
-        <div className="w-10 h-10 border-4 border-[#e23744] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-[100dvh] phone-screen flex flex-col items-center justify-center bg-[#030504]">
+        <div className="w-10 h-10 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin" />
         <p className="text-xs text-neutral-400 mt-3 font-semibold">Loading profile...</p>
       </div>
     )
   }
 
-  // Real values only — empty string means "not provided yet".
   const fullName = (profile?.full_name || '').trim()
   const email = (profile?.email || user?.email || '').trim()
   const phone = (profile?.phone || user?.user_metadata?.phone || user?.phone || '').trim()
   const initial = fullName ? fullName.charAt(0).toUpperCase() : ''
 
   return (
-    <div className="min-h-[100dvh] phone-screen flex flex-col bg-[#0a0a0a] text-white pb-safe relative">
+    <div className="min-h-[100dvh] phone-screen flex flex-col bg-[#030504] text-white pb-safe relative">
       {/* Header */}
-      <header className="bg-neutral-900 sticky top-0 z-40 px-4 h-14 flex items-center justify-between border-b border-neutral-800">
-        <div className="flex items-center gap-2 text-[#e23744]">
-          <MapPin className="size-5" />
-          <span className="font-extrabold text-sm text-neutral-100">K14 Bakers</span>
+      <header className="bg-neutral-900/90 backdrop-blur sticky top-0 z-40 px-4 h-14 flex items-center justify-between border-b border-white/10">
+        <div className="flex items-center gap-2 text-[#d4af37]">
+          <img src="/new-logo.jpeg" alt="BMT" className="w-6 h-6 rounded-full object-cover shadow-sm" />
+          <span className="font-extrabold text-sm text-neutral-100">BookMyTabarruk</span>
         </div>
         <button className="p-1 cursor-pointer">
           <Search className="size-5 text-neutral-200" />
@@ -150,19 +146,19 @@ export default function ProfilePage() {
         {/* Profile Card Info */}
         <div className="flex flex-col items-center pt-6 pb-5">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-neutral-800 flex items-center justify-center shadow-md border-2 border-neutral-700 select-none">
+            <div className="w-24 h-24 rounded-full bg-emerald-950/40 flex items-center justify-center shadow-md border-2 border-[#d4af37]/40 select-none">
               {initial ? (
-                <span className="text-4xl font-extrabold text-[#e23744]">{initial}</span>
+                <span className="text-4xl font-extrabold text-[#d4af37]">{initial}</span>
               ) : (
-                <UserIcon className="size-10 text-neutral-500" />
+                <UserIcon className="size-10 text-[#d4af37]/60" />
               )}
             </div>
             {/* Edit pencil badge */}
             <button
               onClick={() => setIsEditing(true)}
-              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#e23744] text-white flex items-center justify-center shadow-md cursor-pointer border-2 border-[#0a0a0a] hover:bg-[#c52d39] transition-colors"
+              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#d4af37] text-black flex items-center justify-center shadow-md cursor-pointer border-2 border-[#030504] hover:bg-[#c79a2b] transition-colors"
             >
-              <svg className="size-3.5 fill-white" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="size-3.5 fill-black" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M7.127 22.564l-5.127 1.436 1.436-5.127 12.192-12.192 3.691 3.691-12.192 12.192zm14.288-14.288l-2.485-2.485 1.586-1.586 2.485 2.485-1.586 1.586z"/>
               </svg>
             </button>
@@ -174,7 +170,7 @@ export default function ProfilePage() {
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="mt-4 text-sm font-bold text-[#e23744] hover:underline"
+              className="mt-4 text-sm font-bold text-[#d4af37] hover:underline"
             >
               + Add your name
             </button>
@@ -194,23 +190,23 @@ export default function ProfilePage() {
 
           {/* Phone */}
           {phone ? (
-            <div className="mt-2.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide text-[#e23744] bg-[#1c1c1c]">
+            <div className="mt-2.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide text-[#d4af37] bg-emerald-950/40 border border-[#d4af37]/20">
               {phone}
             </div>
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="mt-2.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide text-neutral-400 bg-[#1c1c1c] hover:text-neutral-200"
+              className="mt-2.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide text-neutral-400 bg-neutral-900 hover:text-neutral-200"
             >
               + Add your phone
             </button>
           )}
         </div>
 
-        {/* Orders stat (real) */}
+        {/* Orders stat */}
         <div className="px-4 mb-5">
-          <div className="bg-neutral-900 rounded-2xl p-4 text-center border border-neutral-800/50 flex flex-col justify-center">
-            <span className="text-2xl font-extrabold text-[#e23744]">{orderCount}</span>
+          <div className="bg-[#0a1812] rounded-2xl p-4 text-center border border-emerald-900/20 flex flex-col justify-center">
+            <span className="text-2xl font-extrabold text-[#d4af37]">{orderCount}</span>
             <span className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase mt-0.5">
               {orderCount === 1 ? 'Order' : 'Orders'}
             </span>
@@ -220,10 +216,10 @@ export default function ProfilePage() {
         {/* Options List */}
         <div className="px-4 space-y-2.5 mb-6">
           {[
-            { label: 'Saved Addresses', icon: MapPin, color: 'bg-[#2a1416] text-[#e23744] border-[#3a1f22]/20', href: '/location' },
-            { label: 'Order History', icon: History, color: 'bg-[#2a2410] text-amber-600 border-[#3a3420]/20', href: '/orders' },
-            { label: 'Help & Support', icon: HelpCircle, color: 'bg-cyan-50 text-cyan-600 border-cyan-100/20', onClick: () => setActiveModal('support') },
-            { label: 'Logout', icon: LogOut, color: 'bg-[#2a1416] text-[#e23744] border-[#3a1f22]/20', onClick: handleLogout },
+            { label: 'Saved Addresses', icon: MapPin, color: 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30', href: '/location' },
+            { label: 'Order History', icon: History, color: 'bg-[#2a2410] text-[#d4af37] border-[#3a3420]/30', href: '/orders' },
+            { label: 'Help & Support', icon: HelpCircle, color: 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30', onClick: () => setActiveModal('support') },
+            { label: 'Logout', icon: LogOut, color: 'bg-red-950/30 text-red-400 border-red-900/20', onClick: handleLogout },
           ].map((opt, i) => {
             const Icon = opt.icon
             return (
@@ -233,7 +229,7 @@ export default function ProfilePage() {
                   if (opt.onClick) opt.onClick()
                   else if (opt.href && opt.href !== '#') router.push(opt.href)
                 }}
-                className="bg-neutral-900 rounded-2xl p-3 flex items-center justify-between border border-neutral-800/50 cursor-pointer hover:bg-neutral-800/40 active:scale-[0.99] transition-all"
+                className="bg-[#0a1812] rounded-2xl p-3 flex items-center justify-between border border-emerald-900/20 cursor-pointer hover:bg-emerald-900/10 active:scale-[0.99] transition-all"
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border ${opt.color}`}>
@@ -252,12 +248,12 @@ export default function ProfilePage() {
       {/* ── Edit Profile Modal ── */}
       {isEditing && (
         <div className="absolute inset-0 bg-black/60 z-50 flex items-end justify-center transition-all duration-300">
-          <div className="bg-neutral-900 w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-neutral-800 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+          <div className="bg-[#0a1812] w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-emerald-900/30 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <h3 className="text-base font-extrabold text-white">Edit Profile</h3>
               <button
                 onClick={() => setIsEditing(false)}
-                className="p-1 rounded-full hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="p-1 rounded-full hover:bg-white/5 transition-colors cursor-pointer"
               >
                 <X className="size-5 text-neutral-400" />
               </button>
@@ -267,12 +263,12 @@ export default function ProfilePage() {
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Full Name</label>
                 <div className="relative">
-                  <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-neutral-400" />
+                  <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#d4af37]/60" />
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 bg-neutral-900 border border-neutral-700 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#e23744] transition-all"
+                    className="w-full h-11 pl-10 pr-4 bg-black/30 border border-emerald-900/30 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#d4af37] text-white placeholder:text-white/20 transition-all"
                     placeholder="Enter your name"
                     required
                   />
@@ -282,12 +278,12 @@ export default function ProfilePage() {
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Email</label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-neutral-400" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#d4af37]/60" />
                   <input
                     type="email"
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 bg-neutral-900 border border-neutral-700 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#e23744] transition-all"
+                    className="w-full h-11 pl-10 pr-4 bg-black/30 border border-emerald-900/30 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#d4af37] text-white placeholder:text-white/20 transition-all"
                     placeholder="Enter your email"
                   />
                 </div>
@@ -296,12 +292,12 @@ export default function ProfilePage() {
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Phone Number</label>
                 <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-neutral-400" />
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#d4af37]/60" />
                   <input
                     type="tel"
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 bg-neutral-900 border border-neutral-700 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#e23744] transition-all"
+                    className="w-full h-11 pl-10 pr-4 bg-black/30 border border-emerald-900/30 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#d4af37] text-white placeholder:text-white/20 transition-all"
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -311,11 +307,11 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full h-11 bg-[#e23744] text-white text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer hover:bg-[#c52d39] active:scale-[0.99] transition-all disabled:opacity-50"
+                  className="w-full h-11 bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-black text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50"
                 >
                   {saving ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
                       Saving changes...
                     </>
                   ) : (
@@ -331,24 +327,24 @@ export default function ProfilePage() {
       {/* ── Help & Support Modal ── */}
       {activeModal === 'support' && (
         <div className="absolute inset-0 bg-black/60 z-50 flex items-end justify-center transition-all duration-300">
-          <div className="bg-neutral-900 w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-neutral-800 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+          <div className="bg-[#0a1812] w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-emerald-900/30 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <h3 className="text-base font-extrabold text-white">Help & Support</h3>
               <button
                 onClick={() => setActiveModal(null)}
-                className="p-1 rounded-full hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="p-1 rounded-full hover:bg-white/5 transition-colors cursor-pointer"
               >
                 <X className="size-5 text-neutral-400" />
               </button>
             </div>
 
             <p className="text-xs text-neutral-400 leading-relaxed font-semibold">
-              Need help with an order? Reach out to the K14 kitchen and the team
+              Need help with an order? Reach out to the BookMyTabarruk kitchen and the team
               will assist you.
             </p>
             <button
               onClick={() => toast.info('Support contact coming soon')}
-              className="w-full h-11 bg-[#1c1c1c] hover:bg-[#2a1416] text-[#e23744] text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
+              className="w-full h-11 bg-emerald-950/40 hover:bg-emerald-900/30 text-emerald-400 text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-colors border border-emerald-900/30"
             >
               Contact Support
             </button>

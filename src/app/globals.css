@@ -48,40 +48,40 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* K14 — black base, white text, red accent */
+/* BMT — Book My Tabarruk: emerald green, black, white, gold */
 :root {
-  --background: #000000;
+  --background: #030504;
   --foreground: #ffffff;
-  --card: #161616;
+  --card: #0a1812;
   --card-foreground: #ffffff;
-  --popover: #161616;
+  --popover: #0a1812;
   --popover-foreground: #ffffff;
-  --primary: #e23744;
+  --primary: #10b981;
   --primary-foreground: #ffffff;
   --secondary: #1c1c1c;
   --secondary-foreground: #ffffff;
   --muted: #1c1c1c;
   --muted-foreground: #b5b5b5;
-  --accent: #1c1c1c;
+  --accent: #0a1812;
   --accent-foreground: #ffffff;
-  --destructive: #e23744;
+  --destructive: #ef4444;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.14);
-  --ring: #e23744;
-  --chart-1: #e23744;
+  --ring: #10b981;
+  --chart-1: #10b981;
   --chart-2: #d4af37;
-  --chart-3: #c52d39;
+  --chart-3: #059669;
   --chart-4: #9a9a9a;
   --chart-5: #2a2a2a;
   --radius: 0.625rem;
-  --sidebar: #0a0a0a;
+  --sidebar: #0a1812;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #e23744;
+  --sidebar-primary: #10b981;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #1c1c1c;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #e23744;
+  --sidebar-ring: #10b981;
 }
 
 .dark {
@@ -119,13 +119,13 @@
 }
 
 :root {
-  --brand: #e23744;
-  --brand-dark: #c52d39;
-  --brand-light: #2a1416;
+  --brand: #10b981;
+  --brand-dark: #059669;
+  --brand-light: #0a1812;
   --gold: #d4af37;
-  --surface: #000000;
-  --surface-low: #0a0a0a;
-  --surface-card: #161616;
+  --surface: #030504;
+  --surface-low: #050a08;
+  --surface-card: #0a1812;
   --on-brand: #ffffff;
   --text-primary: #ffffff;
   --text-secondary: #b5b5b5;
@@ -149,7 +149,7 @@
   }
 }
 
-/* ── K14 brand helpers ── */
+/* ── BMT / K14 brand helpers ── */
 .font-serif-display {
   font-family: var(--font-playfair), 'Playfair Display', Georgia, serif;
 }
@@ -162,6 +162,92 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+.bmt-gold-gradient {
+  background: linear-gradient(135deg, #f5d77a 0%, #d4af37 45%, #a67c1f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── BMT Login hero background ── */
+.bmt-hero-bg {
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, #163d26 0%, #0a2018 40%, #030a06 100%);
+}
+
+/* ── Niyaz · Barkat · Ibaadat tagline bar ── */
+.niyaz-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #b8952a;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+.niyaz-bar::before,
+.niyaz-bar::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, currentColor, transparent);
+  opacity: 0.4;
+}
+
+/* ── BMT multi-lang brand strip ── */
+.bmt-brand-strip {
+  background: linear-gradient(135deg, #0f2e1c 0%, #183825 100%);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 1rem;
+}
+
+/* ── Animations ── */
+@keyframes bmt-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes bmt-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes bmt-slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes bmt-pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  50%       { box-shadow: 0 0 0 12px rgba(212, 175, 55, 0); }
+}
+@keyframes bmt-particle {
+  0%   { opacity: 0; transform: translateY(0) scale(0); }
+  20%  { opacity: 0.6; }
+  80%  { opacity: 0.3; }
+  100% { opacity: 0; transform: translateY(-80px) scale(1.5); }
+}
+@keyframes bmt-spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes bmt-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-bmt-float    { animation: bmt-float 4s ease-in-out infinite; }
+.animate-bmt-slide-up { animation: bmt-slide-up 0.7s ease both; }
+.animate-bmt-pulse-gold { animation: bmt-pulse-gold 2.5s ease-in-out infinite; }
+.animate-bmt-spin-slow  { animation: bmt-spin-slow 20s linear infinite; }
+.animate-bmt-fade-in    { animation: bmt-fade-in 0.5s ease both; }
+
+/* stagger helpers */
+.delay-100  { animation-delay: 0.1s; }
+.delay-200  { animation-delay: 0.2s; }
+.delay-300  { animation-delay: 0.3s; }
+.delay-400  { animation-delay: 0.4s; }
+.delay-500  { animation-delay: 0.5s; }
+.delay-600  { animation-delay: 0.6s; }
+.delay-700  { animation-delay: 0.7s; }
+.delay-800  { animation-delay: 0.8s; }
 
 /* Faint "Ya Hussain" (يا حسين) calligraphic watermark behind hero content */
 .ya-hussain-watermark {

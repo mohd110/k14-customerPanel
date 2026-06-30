@@ -5,7 +5,6 @@ import { persist } from 'zustand/middleware'
 import { useEffect, useState } from 'react'
 import type { Product } from '@/lib/types'
 
-// ── Cart (client-side; checkout writes to Supabase) ───
 export interface K14CartItem {
   item: Product
   qty: number
@@ -45,15 +44,12 @@ export const useCart = create<CartState>()(
       },
       clear: () => set({ items: [] }),
     }),
-    { name: 'k14-cart-v2' }
+    { name: 'bmt-cart-v1' }
   )
 )
 
-// ── Selected menu date ────────────────────────────────
-// The menu is offered per delivery date; the chosen date is persisted
-// so it survives navigation (e.g. menu → cart → back).
-interface MenuDateState {
-  date: string | null // YYYY-MM-DD
+export interface MenuDateState {
+  date: string | null
   setDate: (d: string | null) => void
 }
 
@@ -63,11 +59,46 @@ export const useMenuDate = create<MenuDateState>()(
       date: null,
       setDate: (date) => set({ date }),
     }),
-    { name: 'k14-menu-date' }
+    { name: 'bmt-menu-date' }
   )
 )
 
-// Guard against persisted-store hydration mismatches.
+export interface LanguageState {
+  lang: 'en' | 'hi'
+  setLang: (l: 'en' | 'hi') => void
+}
+
+export const useLanguage = create<LanguageState>()(
+  persist(
+    (set) => ({
+      lang: 'en',
+      setLang: (lang) => set({ lang }),
+    }),
+    { name: 'bmt-lang' }
+  )
+)
+
+export interface ActiveStoreState {
+  storeId: string | null
+  storeSlug: string | null
+  setStore: (id: string, slug: string) => void
+  clearStore: () => void
+}
+
+export const useActiveStore = create<ActiveStoreState>()(
+  persist(
+    (set) => ({
+      storeId: null,
+      storeSlug: null,
+      setStore: (storeId, storeSlug) => set({ storeId, storeSlug }),
+      clearStore: () => set({ storeId: null, storeSlug: null }),
+    }),
+    { name: 'bmt-active-store' }
+  )
+)
+
+export const t = (en: string, hi: string, lang: 'en' | 'hi') => lang === 'hi' ? hi : en
+
 export function useHydrated() {
   const [hydrated, setHydrated] = useState(false)
   useEffect(() => setHydrated(true), [])

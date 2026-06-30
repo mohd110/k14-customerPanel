@@ -1,13 +1,13 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowRight, MapPin, Lock, Heart, ShieldCheck, Loader2, Phone } from 'lucide-react'
+import { ArrowRight, Phone, ShieldCheck, HelpCircle, CheckCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useLanguage, t } from '@/lib/k14-store'
 
-// Normalise an Indian mobile number to E.164 (+91…). Bare 10-digit numbers
-// get +91 prepended; anything already in +CC form is kept.
+/* ─── phone normaliser ─── */
 function toE164(raw: string): string | null {
   const digits = raw.replace(/[^\d]/g, '')
   if (raw.trim().startsWith('+')) return `+${digits}`
@@ -16,124 +16,412 @@ function toE164(raw: string): string | null {
   return null
 }
 
+/* ─── BMT Logo SVG Component (White & Gold, transparent bg) ─── */
+function BmtLogoSvg({ className = "w-28 h-28" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Outer Glow / Halo */}
+      <circle cx="100" cy="100" r="85" fill="none" stroke="#d4af37" strokeWidth="1" strokeDasharray="4 4" className="animate-bmt-spin-slow" />
+      
+      {/* Main White Circular Ring */}
+      <circle cx="100" cy="90" r="60" stroke="white" strokeWidth="4" fill="none" strokeLinecap="round" />
+      
+      {/* Golden Dome (Mosque shape) */}
+      <path d="M75 105C75 75 85 60 100 45C115 60 125 75 125 105H75Z" fill="url(#goldGradient)" />
+      {/* Dome Top Spire */}
+      <path d="M100 45V30M97 33H103" stroke="#d4af37" strokeWidth="3" strokeLinecap="round" />
+      
+      {/* Flag (Ya Hussain) */}
+      <path d="M100 30L125 35L100 40Z" fill="#d4af37" />
+      <line x1="100" y1="30" x2="100" y2="45" stroke="#d4af37" strokeWidth="2" />
+      
+      {/* White Hand holding Bowl */}
+      <path d="M60 120C80 140 120 140 140 120C125 122 105 122 90 115C80 110 70 112 60 120Z" fill="white" />
+      {/* Bowl / Food inside */}
+      <path d="M85 110C95 100 105 100 115 110H85Z" fill="#f5d77a" />
+      
+      {/* Definitions for Gradients */}
+      <defs>
+        <linearGradient id="goldGradient" x1="75" y1="45" x2="125" y2="105" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#f5d77a" />
+          <stop offset="50%" stopColor="#d4af37" />
+          <stop offset="100%" stopColor="#a67c1f" />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+}
+
+/* ─── inner (needs useSearchParams) ─── */
 function LoginInner() {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const params = useSearchParams()
-  const redirect = params.get('redirect') || '/menu'
+  const redirect = params.get('redirect') || '/stores'
+  const { lang, setLang } = useLanguage()
 
-  // Free, contact-only login — no SMS/OTP. The phone number is both the
-  // identifier and (with a fixed suffix) the password, so returning numbers
-  // sign in and new numbers sign up automatically. Name/email are collected
-  // at checkout. Requires Supabase → Auth → Phone: enabled, "Confirm phone" OFF.
+  useEffect(() => { setMounted(true) }, [])
+
   async function handleContinue(e: React.FormEvent) {
     e.preventDefault()
     const e164 = toE164(phone)
     if (!e164) {
-      toast.error('Enter a valid mobile number')
+      toast.error(t('Enter a valid 10-digit mobile number', 'सही मोबाइल नंबर दर्ज करें', lang))
       return
     }
     setLoading(true)
     const supabase = createClient()
-    const password = `${e164}#k14-tabarruk`
+    const passwordNew = `${e164}#bmt-user`
+    const passwordOld = `${e164}#k14-tabarruk`
 
-    let { error } = await supabase.auth.signInWithPassword({ phone: e164, password })
-    // First time on this number → create the account, then we're signed in.
-    if (error) {
-      const res = await supabase.auth.signUp({
-        phone: e164,
-        password,
-        options: { data: { role: 'customer', phone: e164 } },
-      })
-      error = res.error
+    // 1. Try sign in with the new password format
+    let signInResult = await supabase.auth.signInWithPassword({ phone: e164, password: passwordNew })
+    
+    // 2. If it fails, retry with the old password format
+    if (signInResult.error) {
+      const oldSignInResult = await supabase.auth.signInWithPassword({ phone: e164, password: passwordOld })
+      if (!oldSignInResult.error) {
+        signInResult = oldSignInResult
+      }
     }
-    setLoading(false)
-    if (error) {
-      toast.error(error.message)
+
+    // 3. If signed in successfully, redirect
+    if (!signInResult.error) {
+      router.push(redirect)
+      router.refresh()
       return
     }
+
+    // 4. Try sign up (new user) with the new password format
+    const signUpResult = await supabase.auth.signUp({
+      phone: e164,
+      password: passwordNew,
+      options: { data: { role: 'customer', phone: e164 } },
+    })
+
+    // 5. If already registered, retry sign-in with both password formats
+    if (signUpResult.error) {
+      const errText = signUpResult.error.message.toLowerCase()
+      if (
+        errText.includes('already registered') ||
+        errText.includes('already exists') ||
+        errText.includes('unique constraint') ||
+        signUpResult.error.status === 422
+      ) {
+        let retryResult = await supabase.auth.signInWithPassword({ phone: e164, password: passwordNew })
+        if (retryResult.error) {
+          retryResult = await supabase.auth.signInWithPassword({ phone: e164, password: passwordOld })
+        }
+        
+        setLoading(false)
+        if (retryResult.error) {
+          toast.error(`${t('Sign-in failed', 'लॉगिन विफल रहा', lang)}: ${retryResult.error.message}`)
+          return
+        }
+        router.push(redirect)
+        router.refresh()
+        return
+      }
+
+      setLoading(false)
+      toast.error(`${t('Authentication failed', 'प्रमाणीकरण विफल रहा', lang)}: ${signUpResult.error.message}`)
+      return
+    }
+
+    // Signup succeeded
     router.push(redirect)
     router.refresh()
   }
 
-  return (
-    <div className="phone-screen min-h-[100dvh] flex flex-col bg-[#0e0b08] relative overflow-hidden">
-      {/* shrine banner */}
-      <div className="relative h-40 w-full overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/k14/shrine-night.png" alt="Shrine" className="h-full w-full object-cover opacity-70" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0e0b08]" />
-      </div>
+  const isHindi = lang === 'hi'
 
-      <div className="flex flex-1 flex-col px-6 pb-8 -mt-10 relative z-10">
-        {/* Brand */}
-        <div className="flex flex-col items-center pb-6">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/k14-logo.png" alt="K14 Bakers" className="w-52 object-contain" />
-          <p className="mt-2 text-[11px] font-semibold tracking-[0.35em] text-[#d4af37]/80">
-            TABBRUK SERVICE
-          </p>
+  const categories = isHindi
+    ? [
+        { icon: '🍞', label: 'बेकरी आइटम', sub: 'केक, ब्रेड, पेस्ट्री' },
+        { icon: '🍳', label: 'किचन वेयर', sub: 'बर्तन, किचन सेट' },
+        { icon: '🍛', label: 'मुगलाई खाना', sub: 'बिरयानी, पुलाव, कबाब' },
+        { icon: '🥤', label: 'जूस & ड्रिंक्स', sub: 'जूस, शरबत, कोल्ड ड्रिंक' },
+        { icon: '🍪', label: 'बिस्किट्स & स्नैक्स', sub: 'बिस्किट, नमकीन, सेक्स' },
+        { icon: '🛒', label: 'FMCG प्रोडक्ट्स', sub: 'दैनिक उपयोग की वस्तुएं' },
+        { icon: '🍬', label: 'मिठाई & नियाज़', sub: 'मिठाई, हलवा, नियाज़' },
+        { icon: '📦', label: 'अन्य आइटम', sub: 'और भी बहुत कुछ…' },
+      ]
+    : [
+        { icon: '🍞', label: 'Bakery Items', sub: 'Cakes, Bread, Pastries' },
+        { icon: '🍳', label: 'Kitchenware', sub: 'Utensils, Cookware' },
+        { icon: '🍛', label: 'Mughlai Food', sub: 'Biryani, Pulao, Kabab' },
+        { icon: '🥤', label: 'Juices & Drinks', sub: 'Juices, Sharbat, Cold Drinks' },
+        { icon: '🍪', label: 'Biscuits & Snacks', sub: 'Biscuits, Namkeen, Snacks' },
+        { icon: '🛒', label: 'FMCG Products', sub: 'Daily essentials' },
+        { icon: '🍬', label: 'Sweets & Mithai', sub: 'Mithai, Halwa, Sweets' },
+        { icon: '📦', label: 'Other Items', sub: 'And many more…' },
+      ]
+
+  return (
+    <div
+      className="phone-screen min-h-[100dvh] flex flex-col"
+      style={{ background: '#FAF6F0' }}
+    >
+      {/* ══════════════════════════════════════════
+          TOP CURVED HEADER (Dome-like shape)
+      ══════════════════════════════════════════ */}
+      <div
+        className="relative overflow-hidden pt-8 pb-16 rounded-b-[40px] shadow-lg flex flex-col items-center text-center px-6"
+        style={{ background: 'linear-gradient(180deg, #0e3d2a 0%, #072519 100%)' }}
+      >
+        {/* Background Watermark Ya Hussain */}
+        <div className="absolute inset-0 pointer-events-none select-none flex items-center justify-center opacity-5" aria-hidden>
+          <span className="text-[120px] text-[#d4af37]" dir="rtl">يا حسين</span>
         </div>
 
-        {/* Card */}
-        <div className="relative">
-          <div className="absolute left-1/2 -top-5 -translate-x-1/2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d4af37]/40 bg-[#17120c]">
-              <ShieldCheck className="size-5 text-[#d4af37]" />
-            </div>
-          </div>
-
-          <form
-            onSubmit={handleContinue}
-            className="rounded-2xl border border-[#d4af37]/15 bg-[#17120c]/90 px-6 pb-7 pt-9 shadow-[0_20px_50px_rgba(0,0,0,0.6)]"
+        {/* Language selector toggle button */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-0.5 rounded-full border border-white/20 bg-white/10 p-1">
+          <button
+            id="lang-en"
+            onClick={() => setLang('en')}
+            className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all ${
+              !isHindi ? 'bg-white text-[#0e3d2a] shadow' : 'text-white/60 hover:text-white'
+            }`}
           >
-            <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-[#d4af37]/80">
-              MOBILE NUMBER
-            </label>
-            <div className="mb-6 flex items-center gap-2 rounded-lg border border-white/10 bg-black/40 px-3 focus-within:border-[#d4af37]/50 transition-colors">
-              <Phone className="size-4 shrink-0 text-[#d4af37]/70" />
+            EN
+          </button>
+          <button
+            id="lang-hi"
+            onClick={() => setLang('hi')}
+            className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all ${
+              isHindi ? 'bg-white text-[#0e3d2a] shadow' : 'text-white/60 hover:text-white'
+            }`}
+            style={{ fontFamily: 'var(--font-devanagari), sans-serif' }}
+          >
+            हिं
+          </button>
+        </div>
+
+        {/* BMT Logo (New Logo Image without cutting, replacing HTML brand text) */}
+        <div className="relative mb-2 w-52 h-52">
+          <img src="/new-logo.jpeg" alt="BookMyTabarruk" className="w-full h-full object-contain" />
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          OVERLAPPING LOGIN INPUT CARD
+      ══════════════════════════════════════════ */}
+      <div className="-mt-8 mx-5 relative z-10 bg-white rounded-2xl shadow-xl p-5 border border-gray-100/80">
+        
+        {/* Banner text inside the card */}
+        <div className="text-center mb-4">
+          <h2
+            className="text-lg font-bold text-gray-900 leading-tight"
+            style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
+          >
+            {t('Book Tabarruk Online For Your Majlis', 'अपने मजलिस का तबरूक ऑनलाइन बुक करें', lang)}
+          </h2>
+          
+          {/* Niyaz taglines inside form */}
+          <div className="niyaz-bar mt-2">
+            <style>{`.niyaz-bar { color: #b8952a; } .niyaz-bar::before, .niyaz-bar::after { background: linear-gradient(to right, transparent, #b8952a50, transparent); }`}</style>
+            {isHindi ? 'नियाज़' : 'NIYAZ'}
+            <span className="text-[#b8952a]/40">·</span>
+            {isHindi ? 'बरकत' : 'BARKAT'}
+            <span className="text-[#b8952a]/40">·</span>
+            {isHindi ? 'इबादत' : 'IBAADAT'}
+          </div>
+        </div>
+
+        <form onSubmit={handleContinue} className="space-y-4">
+          {/* Country code flag dropdown + Number input field */}
+          <div className="flex items-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 focus-within:border-[#0e3d2a] focus-within:ring-2 focus-within:ring-[#0e3d2a]/10 transition-all">
+            <div className="flex items-center gap-1.5 px-3 py-3 border-r border-gray-200 shrink-0">
+              <span className="text-base">🇮🇳</span>
+              <span className="text-sm font-bold text-gray-500">+91</span>
+            </div>
+            <div className="flex items-center gap-2 flex-1 px-3">
+              <Phone className="size-4 shrink-0 text-gray-400" />
               <input
+                id="phone-input"
                 type="tel"
                 inputMode="numeric"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="10-digit mobile number"
+                placeholder={t('Enter mobile number', 'अपना मोबाइल नंबर दर्ज करें', lang)}
                 autoComplete="tel"
-                className="h-12 w-full bg-transparent text-sm text-white placeholder:text-white/30 outline-none"
+                className="h-12 w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
+                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
               />
             </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-sm font-bold text-[#1a1206] shadow-md shadow-[#d4af37]/20 transition-transform active:scale-[0.98] disabled:opacity-60"
-            >
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <>Continue <ArrowRight className="size-4" /></>}
-            </button>
+          {/* LOGIN button */}
+          <button
+            id="login-btn"
+            type="submit"
+            disabled={loading}
+            className="group relative flex h-12 w-full items-center justify-center gap-2 rounded-xl overflow-hidden text-sm font-bold text-white shadow-lg transition-transform active:scale-[0.98] disabled:opacity-60"
+            style={{ background: 'linear-gradient(180deg, #1a5c35 0%, #0e3d22 100%)' }}
+          >
+            {/* Shimmer overlay effect */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%)',
+                backgroundSize: '200% 100%',
+                animation: 'bmt-shimmer 2.5s linear infinite',
+              }}
+            />
+            {loading ? (
+              <span className="size-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <span style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}>
+                  {t('LOGIN / SIGN UP WITH MOBILE NUMBER', 'मोबाइल नंबर से लॉगिन करें', lang)}
+                </span>
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              </>
+            )}
+          </button>
 
-            <p className="mt-7 text-center text-[11px] leading-relaxed text-white/40">
-              Just your number to continue — no password needed. Your name and
-              other details are added when you check out.
-            </p>
-          </form>
+          {/* Security note */}
+          <p className="flex items-center justify-center gap-1.5 text-center text-[10px] text-gray-400">
+            <ShieldCheck className="size-3.5 text-[#0e3d2a]/60" />
+            {t('We respect your privacy & secure your data', 'आपका डेटा सुरक्षित है', lang)}
+          </p>
+        </form>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          CATEGORIES SECTION
+      ══════════════════════════════════════════ */}
+      <div className="px-5 mt-6 space-y-4">
+        
+        {/* Title */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent to-gray-200" />
+          <span className="text-[10px] font-bold tracking-[0.2em] text-[#b8952a] uppercase">
+            {isHindi ? 'हमारे तबरूक की श्रेणियाँ' : 'WHAT CAN YOU BOOK?'}
+          </span>
+          <div className="flex-1 h-px bg-gradient-to-l from-transparent to-gray-200" />
         </div>
 
-        {/* Footer */}
-        <div className="mt-auto pt-10">
-          <p className="text-center text-[11px] italic text-white/30">
-            &ldquo;Every day is Ashura, every land is Karbala.&rdquo;
-          </p>
-          <div className="mt-5 flex items-center justify-center gap-6 text-white/25">
-            <MapPin className="size-4" />
-            <Lock className="size-4" />
-            <Heart className="size-4" />
-            <span className="ml-2 flex items-center gap-1 text-[#d4af37]/50">
-              <ShieldCheck className="size-4" />
-              <span className="text-[9px] font-bold tracking-[0.15em]">SALUTE 72</span>
+        {/* 4x2 Clean Round-Rect Cards Grid */}
+        <div className="grid grid-cols-4 gap-3">
+          {categories.map((cat, i) => (
+            <div key={i} className="flex flex-col items-center text-center gap-1">
+              <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100/80 shadow-md shadow-gray-100 flex items-center justify-center text-2xl">
+                {cat.icon}
+              </div>
+              <p
+                className="text-[9px] font-extrabold text-gray-700 leading-tight"
+                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
+              >
+                {cat.label}
+              </p>
+              <p
+                className="text-[8px] text-gray-400 leading-tight"
+                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
+              >
+                {cat.sub}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          GREEN BOX (Shown once, underneath header & card)
+      ══════════════════════════════════════════ */}
+      <div className="px-5 mt-6">
+        <div
+          className="rounded-2xl overflow-hidden shadow-md"
+          style={{
+            background: 'linear-gradient(135deg, #0f2e1c 0%, #183825 100%)',
+            border: '1px solid rgba(212,175,55,0.2)',
+          }}
+        >
+          {/* Columns */}
+          <div className="flex items-stretch divide-x divide-[#d4af37]/15 px-2 py-3">
+            <div className="flex-1 flex flex-col items-center justify-center text-center px-2">
+              <p className="text-[10px] font-bold text-white leading-tight" style={{ fontFamily: 'var(--font-devanagari), sans-serif' }}>
+                बुकमाई<span className="text-[#d4af37]">तबरुक</span>
+              </p>
+              <p className="text-[8px] text-white/40 mt-0.5" style={{ fontFamily: 'var(--font-devanagari), sans-serif' }}>तबरुक बुक करें</p>
+            </div>
+            <div className="flex-grow flex-1 flex flex-col items-center justify-center text-center px-2">
+              <p className="text-[10px] font-bold text-white leading-tight">بک مائی <span className="text-[#d4af37]">تبرک</span></p>
+              <p className="text-[8px] text-white/40 mt-0.5">تبرک بک کرین</p>
+            </div>
+            <div className="flex-grow flex-1 flex flex-col items-center justify-center text-center px-2">
+              <p className="text-[10px] font-bold text-white leading-tight">Book<span className="text-[#d4af37]">My</span>Tabarruk</p>
+              <p className="text-[8px] text-white/40 mt-0.5">Tabarruk Book Karein</p>
+            </div>
+          </div>
+          {/* MUHARRAM | SHIA | TABARRUK Bar */}
+          <div className="mx-3 mb-2.5 rounded-lg bg-black/50 border border-white/10 px-3 py-2 flex items-center justify-center gap-2">
+            <span className="text-[10px]">🤲</span>
+            <span className="text-[10px] font-bold tracking-[0.15em] text-white/80">
+              MUHARRAM &nbsp;|&nbsp; SHIA &nbsp;|&nbsp; TABARRUK
             </span>
+            <span className="text-[10px] text-[#d4af37]">☪</span>
+          </div>
+          {/* Hindi tags */}
+          <div className="pb-3 text-center">
+            <p className="text-[9px] text-[#d4af37]/65 tracking-[0.12em]" style={{ fontFamily: 'var(--font-devanagari), sans-serif' }}>
+              — नियाज़ | बरकत | इबादत —
+            </p>
           </div>
         </div>
+      </div>
+
+      {/* ══════════════════════════════════════════
+          FOOTER FEATURES & TAGLINE
+      ══════════════════════════════════════════ */}
+      <div className="px-5 mt-6 pb-24 space-y-6">
+        {/* Features Row */}
+        <div className="grid grid-cols-4 gap-2">
+          {(isHindi
+            ? [
+                { icon: '🛡️', h: 'विश्वसनीय सेवा', s: 'पूरी तरह सुरक्षित' },
+                { icon: '🚚', h: 'समय पर डिलीवरी', s: 'आपके मजलिस के लिए' },
+                { icon: '✅', h: 'बेहतरीन गुणवत्ता', s: 'उत्तम क्वालिटी' },
+                { icon: '🤲', h: 'बरकत और सुकून', s: 'नियाज़ की बरकत' },
+              ]
+            : [
+                { icon: '🛡️', h: 'Trusted & Secure', s: '100% safe payments' },
+                { icon: '🚚', h: 'On Time Delivery', s: 'Timely delivery' },
+                { icon: '✅', h: 'Quality Assured', s: 'Best quality products' },
+                { icon: '🤲', h: 'Serving with Niyat', s: 'From heart, for Majlis' },
+              ]
+          ).map((f, i) => (
+            <div key={i} className="flex flex-col items-center text-center gap-0.5">
+              <span className="text-lg">{f.icon}</span>
+              <p
+                className="text-[9px] font-extrabold text-gray-800 leading-tight"
+                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
+              >
+                {f.h}
+              </p>
+              <p
+                className="text-[8px] text-gray-400 leading-tight"
+                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
+              >
+                {f.s}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sticky Bottom Tagline Footer */}
+      <div
+        className="border-t border-[#d4af37]/25 py-3.5 text-center mt-auto"
+        style={{ background: '#0e3d2a' }}
+      >
+        <p className="text-[9px] font-bold tracking-[0.18em] text-[#d4af37]/75">
+          {isHindi
+            ? '— हर नियाज़ में बरकत, हर तबरुक में मोहब्बत —'
+            : '— HAR NIYAZ MEIN BARAKAT, HAR TABARRUK MEIN MOHABBAT —'}
+        </p>
       </div>
     </div>
   )
@@ -141,7 +429,9 @@ function LoginInner() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="phone-screen min-h-[100dvh] bg-[#0e0b08]" />}>
+    <Suspense fallback={
+      <div className="phone-screen min-h-[100dvh]" style={{ background: '#FAF6F0' }} />
+    }>
       <LoginInner />
     </Suspense>
   )

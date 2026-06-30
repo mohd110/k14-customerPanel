@@ -1,4 +1,4 @@
-export type UserRole = 'customer' | 'restaurant'
+export type UserRole = 'customer' | 'restaurant' | 'bakery'
 export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled'
 export type PaymentStatus = 'awaiting_verification' | 'paid' | 'failed'
 
@@ -10,14 +10,29 @@ export interface Profile {
   phone: string | null
 }
 
+export interface Store {
+  id: string
+  name: string
+  slug: string
+  description: string
+  short_desc: string
+  logo_url: string | null
+  banner_url: string | null
+  theme_color: string
+  is_active: boolean
+  sort_order: number
+  created_at: string
+}
+
 export interface Product {
   id: string
   name: string
   description: string
-  price: number // stored in cents (e.g. 1250 = $12.50)
+  price: number
   photo_url: string | null
   is_available: boolean
-  stock?: number // inventory units; reduces as orders are placed
+  stock?: number
+  store_id?: string
 }
 
 export interface DeliveryAddress {
@@ -39,13 +54,14 @@ export interface OrderItem {
 
 export interface Order {
   id: string
-  order_code?: string | null // human reference, e.g. "k14/LKO/19062026/OR-3"
-  order_seq?: number | null // per-delivery-date serial
+  order_code?: string | null
+  order_seq?: number | null
   customer_id: string
+  store_id?: string | null
   status: OrderStatus
   delivery_address: DeliveryAddress
   total: number
-  note?: string | null // optional customer instructions captured at checkout
+  note?: string | null
   advance_amount: number
   payment_status: PaymentStatus
   payment_ref: string | null

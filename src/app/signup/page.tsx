@@ -65,11 +65,10 @@ export default function SignupPage() {
 
         {/* Center Logo Container */}
         <div className="flex flex-col items-center justify-center z-10 animate-in fade-in zoom-in-95 duration-500">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/k14-logo.png"
-            alt="K14 Bakers"
-            className="w-60 max-w-[80%] object-contain mb-4 drop-shadow-[0_8px_40px_rgba(226,55,68,0.25)]"
+            src="/new-logo.jpeg"
+            alt="BookMyTabarruk"
+            className="w-48 h-48 object-contain mb-4 drop-shadow-xl"
           />
 
           <p className="text-xs text-neutral-400 mt-1 font-semibold italic text-center">
@@ -109,11 +108,10 @@ export default function SignupPage() {
 
         {/* Brand logo over the image */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/k14-logo.png"
-            alt="K14"
-            className="w-28 object-contain drop-shadow-2xl"
+            src="/new-logo.jpeg"
+            alt="BookMyTabarruk"
+            className="w-24 h-24 object-contain drop-shadow-2xl"
           />
         </div>
       </div>

@@ -199,6 +199,10 @@ export default function CheckoutPage() {
       return
     }
 
+    // Derive store_id: use it only when all items come from the same store.
+    const storeIds = [...new Set(items.map((ci) => ci.item.store_id).filter(Boolean))]
+    const orderStoreId = storeIds.length === 1 ? storeIds[0] : null
+
     const altPhoneVal = altPhone.trim() || undefined
     const packingInfo = { packing, packing_label: PACKING_LABEL[packing], packing_fee: packingFee }
     const delivery_address =
@@ -210,6 +214,7 @@ export default function CheckoutPage() {
       .from('orders')
       .insert({
         customer_id: user.id,
+        store_id: orderStoreId ?? undefined,
         status: 'pending',
         delivery_address,
         total,
