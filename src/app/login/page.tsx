@@ -130,7 +130,6 @@ function LoginInner() {
       return
     }
 
-    // Signup succeeded
     router.push(redirect)
     router.refresh()
   }
@@ -139,24 +138,24 @@ function LoginInner() {
 
   const categories = isHindi
     ? [
-        { icon: '🍞', label: 'बेकरी आइटम', sub: 'केक, ब्रेड, पेस्ट्री' },
-        { icon: '🍳', label: 'किचन वेयर', sub: 'बर्तन, किचन सेट' },
-        { icon: '🍛', label: 'मुगलाई खाना', sub: 'बिरयानी, पुलाव, कबाब' },
-        { icon: '🥤', label: 'जूस & ड्रिंक्स', sub: 'जूस, शरबत, कोल्ड ड्रिंक' },
-        { icon: '🍪', label: 'बिस्किट्स & स्नैक्स', sub: 'बिस्किट, नमकीन, सेक्स' },
-        { icon: '🛒', label: 'FMCG प्रोडक्ट्स', sub: 'दैनिक उपयोग की वस्तुएं' },
-        { icon: '🍬', label: 'मिठाई & नियाज़', sub: 'मिठाई, हलवा, नियाज़' },
-        { icon: '📦', label: 'अन्य आइटम', sub: 'और भी बहुत कुछ…' },
+        { icon: '🍞', label: 'बेकरी आइटम' },
+        { icon: '🍳', label: 'किचन वेयर' },
+        { icon: '🍛', label: 'मुगलाई खाना' },
+        { icon: '🥤', label: 'जूस & ड्रिंक्स' },
+        { icon: '🍪', label: 'बिस्किट्स & स्नैक्स' },
+        { icon: '🛒', label: 'FMCG प्रोडक्ट्स' },
+        { icon: '🍬', label: 'मिठाई & नियाज़' },
+        { icon: '📦', label: 'अन्य आइटम' },
       ]
     : [
-        { icon: '🍞', label: 'Bakery Items', sub: 'Cakes, Bread, Pastries' },
-        { icon: '🍳', label: 'Kitchenware', sub: 'Utensils, Cookware' },
-        { icon: '🍛', label: 'Mughlai Food', sub: 'Biryani, Pulao, Kabab' },
-        { icon: '🥤', label: 'Juices & Drinks', sub: 'Juices, Sharbat, Cold Drinks' },
-        { icon: '🍪', label: 'Biscuits & Snacks', sub: 'Biscuits, Namkeen, Snacks' },
-        { icon: '🛒', label: 'FMCG Products', sub: 'Daily essentials' },
-        { icon: '🍬', label: 'Sweets & Mithai', sub: 'Mithai, Halwa, Sweets' },
-        { icon: '📦', label: 'Other Items', sub: 'And many more…' },
+        { icon: '🍞', label: 'Bakery Items' },
+        { icon: '🍳', label: 'Kitchenware' },
+        { icon: '🍛', label: 'Mughlai Food' },
+        { icon: '🥤', label: 'Juices & Drinks' },
+        { icon: '🍪', label: 'Biscuits & Snacks' },
+        { icon: '🛒', label: 'FMCG Products' },
+        { icon: '🍬', label: 'Sweets & Mithai' },
+        { icon: '📦', label: 'Other Items' },
       ]
 
   return (
@@ -164,63 +163,44 @@ function LoginInner() {
       className="phone-screen min-h-[100dvh] flex flex-col"
       style={{ background: '#FAF6F0' }}
     >
-      {/* ══════════════════════════════════════════
-          TOP CURVED HEADER (Dome-like shape)
-      ══════════════════════════════════════════ */}
       <div
-        className="relative overflow-hidden pt-8 pb-16 rounded-b-[40px] shadow-lg flex flex-col items-center text-center px-6"
+        className="relative overflow-hidden pt-6 pb-16 rounded-b-[44px] shadow-lg flex flex-col items-center text-center px-6"
         style={{ background: 'linear-gradient(180deg, #0e3d2a 0%, #072519 100%)' }}
       >
-        {/* Background Watermark Ya Hussain */}
-        <div className="absolute inset-0 pointer-events-none select-none flex items-center justify-center opacity-5" aria-hidden>
-          <span className="text-[120px] text-[#d4af37]" dir="rtl">يا حسين</span>
-        </div>
-
-        {/* Language selector toggle button */}
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-0.5 rounded-full border border-white/20 bg-white/10 p-1">
+        <div className="absolute top-5 right-5 z-20 flex items-center gap-0.5 rounded-full border border-white/20 bg-white/10 p-1">
           <button
-            id="lang-en"
             onClick={() => setLang('en')}
-            className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all ${
+            className={`rounded-full px-3.5 py-1.5 text-[12px] font-bold transition-all ${
               !isHindi ? 'bg-white text-[#0e3d2a] shadow' : 'text-white/60 hover:text-white'
             }`}
           >
             EN
           </button>
           <button
-            id="lang-hi"
             onClick={() => setLang('hi')}
-            className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all ${
+            className={`rounded-full px-3.5 py-1.5 text-[12px] font-bold transition-all ${
               isHindi ? 'bg-white text-[#0e3d2a] shadow' : 'text-white/60 hover:text-white'
             }`}
-            style={{ fontFamily: 'var(--font-devanagari), sans-serif' }}
           >
             हिं
           </button>
         </div>
 
-        {/* BMT Logo (New Logo Image without cutting, replacing HTML brand text) */}
-        <div className="relative mb-2 w-52 h-52">
+        <div className="relative mt-2 mb-1 w-36 h-36">
           <img src="/new-logo.jpeg" alt="BookMyTabarruk" className="w-full h-full object-contain" />
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════
-          OVERLAPPING LOGIN INPUT CARD
-      ══════════════════════════════════════════ */}
-      <div className="-mt-8 mx-5 relative z-10 bg-white rounded-2xl shadow-xl p-5 border border-gray-100/80">
-        
-        {/* Banner text inside the card */}
-        <div className="text-center mb-4">
+      <div className="-mt-10 mx-5 relative z-10 bg-white rounded-3xl shadow-xl p-6 border border-gray-100/80">
+        <div className="text-center mb-5">
           <h2
-            className="text-lg font-bold text-gray-900 leading-tight"
+            className="text-xl font-bold text-gray-900 leading-snug"
             style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
           >
             {t('Book Tabarruk Online For Your Majlis', 'अपने मजलिस का तबरूक ऑनलाइन बुक करें', lang)}
           </h2>
-          
-          {/* Niyaz taglines inside form */}
-          <div className="niyaz-bar mt-2">
+
+          <div className="niyaz-bar mt-2.5 text-xs">
             <style>{`.niyaz-bar { color: #b8952a; } .niyaz-bar::before, .niyaz-bar::after { background: linear-gradient(to right, transparent, #b8952a50, transparent); }`}</style>
             {isHindi ? 'नियाज़' : 'NIYAZ'}
             <span className="text-[#b8952a]/40">·</span>
@@ -231,45 +211,30 @@ function LoginInner() {
         </div>
 
         <form onSubmit={handleContinue} className="space-y-4">
-          {/* Country code flag dropdown + Number input field */}
-          <div className="flex items-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 focus-within:border-[#0e3d2a] focus-within:ring-2 focus-within:ring-[#0e3d2a]/10 transition-all">
-            <div className="flex items-center gap-1.5 px-3 py-3 border-r border-gray-200 shrink-0">
-              <span className="text-base">🇮🇳</span>
+          <div className="flex items-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 focus-within:border-[#0e3d2a] focus-within:ring-2 focus-within:ring-[#0e3d2a]/10 transition-all">
+            <div className="flex items-center gap-1.5 px-4 py-3.5 border-r border-gray-200 shrink-0">
+              <span className="text-lg">🇮🇳</span>
               <span className="text-sm font-bold text-gray-500">+91</span>
             </div>
-            <div className="flex items-center gap-2 flex-1 px-3">
+            <div className="flex items-center gap-2 flex-1 px-3.5">
               <Phone className="size-4 shrink-0 text-gray-400" />
               <input
-                id="phone-input"
                 type="tel"
                 inputMode="numeric"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder={t('Enter mobile number', 'अपना मोबाइल नंबर दर्ज करें', lang)}
-                autoComplete="tel"
-                className="h-12 w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
-                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
+                className="h-12 w-full bg-transparent text-[15px] text-gray-900 placeholder:text-gray-400 outline-none"
               />
             </div>
           </div>
 
-          {/* LOGIN button */}
           <button
-            id="login-btn"
             type="submit"
             disabled={loading}
-            className="group relative flex h-12 w-full items-center justify-center gap-2 rounded-xl overflow-hidden text-sm font-bold text-white shadow-lg transition-transform active:scale-[0.98] disabled:opacity-60"
+            className="group relative flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl overflow-hidden text-[15px] font-bold text-white shadow-lg transition-transform active:scale-[0.98] disabled:opacity-60"
             style={{ background: 'linear-gradient(180deg, #1a5c35 0%, #0e3d22 100%)' }}
           >
-            {/* Shimmer overlay effect */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%)',
-                backgroundSize: '200% 100%',
-                animation: 'bmt-shimmer 2.5s linear infinite',
-              }}
-            />
             {loading ? (
               <span className="size-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
             ) : (
@@ -277,61 +242,34 @@ function LoginInner() {
                 <span style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}>
                   {t('LOGIN / SIGN UP WITH MOBILE NUMBER', 'मोबाइल नंबर से लॉगिन करें', lang)}
                 </span>
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
               </>
             )}
           </button>
-
-          {/* Security note */}
-          <p className="flex items-center justify-center gap-1.5 text-center text-[10px] text-gray-400">
-            <ShieldCheck className="size-3.5 text-[#0e3d2a]/60" />
-            {t('We respect your privacy & secure your data', 'आपका डेटा सुरक्षित है', lang)}
-          </p>
         </form>
       </div>
 
-      {/* ══════════════════════════════════════════
-          CATEGORIES SECTION
-      ══════════════════════════════════════════ */}
-      <div className="px-5 mt-6 space-y-4">
-        
-        {/* Title */}
-        <div className="flex items-center gap-2">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent to-gray-200" />
-          <span className="text-[10px] font-bold tracking-[0.2em] text-[#b8952a] uppercase">
-            {isHindi ? 'हमारे तबरूक की श्रेणियाँ' : 'WHAT CAN YOU BOOK?'}
-          </span>
-          <div className="flex-1 h-px bg-gradient-to-l from-transparent to-gray-200" />
-        </div>
-
-        {/* 4x2 Clean Round-Rect Cards Grid */}
-        <div className="grid grid-cols-4 gap-3">
+      <div className="px-6 mt-7">
+        <p className="mb-3.5 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-[#0e3d2a]/70">
+          {t('Shop by Category', 'श्रेणी चुनें', lang)}
+        </p>
+        <div className="grid grid-cols-4 gap-x-3 gap-y-5">
           {categories.map((cat, i) => (
-            <div key={i} className="flex flex-col items-center text-center gap-1">
-              <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100/80 shadow-md shadow-gray-100 flex items-center justify-center text-2xl">
+            <div key={i} className="flex flex-col items-center text-center gap-1.5">
+              <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100/80 shadow-md shadow-gray-200/60 flex items-center justify-center text-2xl">
                 {cat.icon}
               </div>
               <p
-                className="text-[9px] font-extrabold text-gray-700 leading-tight"
+                className="text-[9.5px] font-bold text-gray-700 leading-tight"
                 style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
               >
                 {cat.label}
-              </p>
-              <p
-                className="text-[8px] text-gray-400 leading-tight"
-                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
-              >
-                {cat.sub}
               </p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════
-          GREEN BOX (Shown once, underneath header & card)
-      ══════════════════════════════════════════ */}
-      <div className="px-5 mt-6">
+      <div className="px-5 mt-7">
         <div
           className="rounded-2xl overflow-hidden shadow-md"
           style={{
@@ -342,30 +280,25 @@ function LoginInner() {
           {/* Columns */}
           <div className="flex items-stretch divide-x divide-[#d4af37]/15 px-2 py-3">
             <div className="flex-1 flex flex-col items-center justify-center text-center px-2">
-              <p className="text-[10px] font-bold text-white leading-tight" style={{ fontFamily: 'var(--font-devanagari), sans-serif' }}>
-                बुकमाई<span className="text-[#d4af37]">तबरुक</span>
-              </p>
-              <p className="text-[8px] text-white/40 mt-0.5" style={{ fontFamily: 'var(--font-devanagari), sans-serif' }}>तबरुक बुक करें</p>
+              <p className="text-[11px] font-bold text-white leading-tight">बुकमाई<span className="text-[#d4af37]">तबरुक</span></p>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center text-center px-2">
+              <p className="text-[11px] font-bold text-white leading-tight">بک مائی <span className="text-[#d4af37]">تبرک</span></p>
             </div>
             <div className="flex-grow flex-1 flex flex-col items-center justify-center text-center px-2">
-              <p className="text-[10px] font-bold text-white leading-tight">بک مائی <span className="text-[#d4af37]">تبرک</span></p>
-              <p className="text-[8px] text-white/40 mt-0.5">تبرک بک کرین</p>
-            </div>
-            <div className="flex-grow flex-1 flex flex-col items-center justify-center text-center px-2">
-              <p className="text-[10px] font-bold text-white leading-tight">Book<span className="text-[#d4af37]">My</span>Tabarruk</p>
-              <p className="text-[8px] text-white/40 mt-0.5">Tabarruk Book Karein</p>
+              <p className="text-[11px] font-bold text-white leading-tight">Book<span className="text-[#d4af37]">My</span>Tabarruk</p>
             </div>
           </div>
           {/* MUHARRAM | SHIA | TABARRUK Bar */}
-          <div className="mx-3 mb-2.5 rounded-lg bg-black/50 border border-white/10 px-3 py-2 flex items-center justify-center gap-2">
+          <div className="mx-2.5 mb-2.5 rounded-lg bg-black/50 border border-white/10 px-3 py-2 flex items-center justify-center gap-2">
             <span className="text-[10px]">🤲</span>
-            <span className="text-[10px] font-bold tracking-[0.15em] text-white/80">
+            <span className="text-[9.5px] font-bold tracking-[0.15em] text-white/80">
               MUHARRAM &nbsp;|&nbsp; SHIA &nbsp;|&nbsp; TABARRUK
             </span>
             <span className="text-[10px] text-[#d4af37]">☪</span>
           </div>
           {/* Hindi tags */}
-          <div className="pb-3 text-center">
+          <div className="pb-2.5 text-center">
             <p className="text-[9px] text-[#d4af37]/65 tracking-[0.12em]" style={{ fontFamily: 'var(--font-devanagari), sans-serif' }}>
               — नियाज़ | बरकत | इबादत —
             </p>
@@ -376,36 +309,30 @@ function LoginInner() {
       {/* ══════════════════════════════════════════
           FOOTER FEATURES & TAGLINE
       ══════════════════════════════════════════ */}
-      <div className="px-5 mt-6 pb-24 space-y-6">
+      <div className="px-5 mt-7 pb-8">
         {/* Features Row */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-3">
           {(isHindi
             ? [
-                { icon: '🛡️', h: 'विश्वसनीय सेवा', s: 'पूरी तरह सुरक्षित' },
-                { icon: '🚚', h: 'समय पर डिलीवरी', s: 'आपके मजलिस के लिए' },
-                { icon: '✅', h: 'बेहतरीन गुणवत्ता', s: 'उत्तम क्वालिटी' },
-                { icon: '🤲', h: 'बरकत और सुकून', s: 'नियाज़ की बरकत' },
+                { icon: '🛡️', h: 'विश्वसनीय सेवा' },
+                { icon: '🚚', h: 'समय पर डिलीवरी' },
+                { icon: '✅', h: 'बेहतरीन गुणवत्ता' },
+                { icon: '🤲', h: 'बरकत और सुकून' },
               ]
             : [
-                { icon: '🛡️', h: 'Trusted & Secure', s: '100% safe payments' },
-                { icon: '🚚', h: 'On Time Delivery', s: 'Timely delivery' },
-                { icon: '✅', h: 'Quality Assured', s: 'Best quality products' },
-                { icon: '🤲', h: 'Serving with Niyat', s: 'From heart, for Majlis' },
+                { icon: '🛡️', h: 'Trusted & Secure' },
+                { icon: '🚚', h: 'On Time Delivery' },
+                { icon: '✅', h: 'Quality Assured' },
+                { icon: '🤲', h: 'Serving with Niyat' },
               ]
           ).map((f, i) => (
-            <div key={i} className="flex flex-col items-center text-center gap-0.5">
-              <span className="text-lg">{f.icon}</span>
+            <div key={i} className="flex flex-col items-center text-center gap-1.5">
+              <span className="text-2xl">{f.icon}</span>
               <p
-                className="text-[9px] font-extrabold text-gray-800 leading-tight"
+                className="text-[9.5px] font-bold text-gray-800 leading-tight"
                 style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
               >
                 {f.h}
-              </p>
-              <p
-                className="text-[8px] text-gray-400 leading-tight"
-                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
-              >
-                {f.s}
               </p>
             </div>
           ))}
@@ -417,7 +344,7 @@ function LoginInner() {
         className="border-t border-[#d4af37]/25 py-3.5 text-center mt-auto"
         style={{ background: '#0e3d2a' }}
       >
-        <p className="text-[9px] font-bold tracking-[0.18em] text-[#d4af37]/75">
+        <p className="text-[9.5px] font-bold tracking-[0.18em] text-[#d4af37]/75">
           {isHindi
             ? '— हर नियाज़ में बरकत, हर तबरुक में मोहब्बत —'
             : '— HAR NIYAZ MEIN BARAKAT, HAR TABARRUK MEIN MOHABBAT —'}

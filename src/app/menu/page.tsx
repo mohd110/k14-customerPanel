@@ -383,7 +383,7 @@ export default function MenuPage() {
 
       {/* ── Footer ── */}
       <footer className="mt-10 border-t border-white/10 px-6 py-8 text-center">
-        <p className="text-sm font-bold text-emerald-400">Book My Tabarruk</p>
+        <p className="text-sm font-bold text-[#d4af37]">Book My Tabarruk</p>
         <p className="mt-1 text-[11px] text-white/40">Serving the community with dignity and devotion.</p>
       </footer>
 

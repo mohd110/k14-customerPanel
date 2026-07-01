@@ -2,23 +2,33 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, ChevronRight, Wheat, UtensilsCrossed, Package } from 'lucide-react'
+import { Loader2, ArrowUpRight, Wheat, UtensilsCrossed, Package, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useLanguage, useActiveStore, t } from '@/lib/k14-store'
 import type { Store } from '@/lib/types'
 import BottomNav from '@/components/BottomNav'
 
+const GOLD = '#d4af37'
+
+/* Local brand logos per store slug (until each store has its own logo_url in
+   the DB). The kebabchi logo will be dropped in here once provided. */
+const STORE_LOGOS: Record<string, string> = {
+  'k14-bakery': '/k14-logo.png',
+}
+
 /* ── store icon map — fallback icons per slug ── */
-function StoreIcon({ slug, active, color }: { slug: string; active: boolean; color: string }) {
-  const cls = `size-7 transition-colors ${active ? '' : 'opacity-30'}`
-  const style = active ? { color } : {}
-  if (slug.includes('kabacchi') || slug.includes('biryani') || slug.includes('restaurant')) {
-    return <UtensilsCrossed className={cls} style={style} />
+function StoreIcon({ slug, color, className = 'size-8' }: { slug: string; color: string; className?: string }) {
+  const style = { color }
+  if (
+    slug.includes('kebab') || slug.includes('kabab') || slug.includes('kabac') ||
+    slug.includes('biryani') || slug.includes('restaurant')
+  ) {
+    return <UtensilsCrossed className={className} style={style} />
   }
   if (slug.includes('crockery') || slug.includes('kitchen')) {
-    return <Package className={cls} style={style} />
+    return <Package className={className} style={style} />
   }
-  return <Wheat className={cls} style={style} />
+  return <Wheat className={className} style={style} />
 }
 
 export default function StoresPage() {
@@ -61,90 +71,103 @@ export default function StoresPage() {
   const comingSoon = stores.filter((s) => !s.is_active)
 
   return (
-    <div className="phone-screen min-h-[100dvh] bg-[#FAF6F0] text-gray-900 pb-24">
+    <div className="phone-screen min-h-[100dvh] bmt-hero-bg pb-28 text-white">
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-20 border-b border-gray-200/60 bg-white/95 px-5 py-3.5 backdrop-blur-md shadow-sm">
+      <header className="sticky top-0 z-20 border-b border-[#d4af37]/15 bg-[#0a2018]/85 px-5 py-3.5 backdrop-blur-md">
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/new-logo.jpeg" alt="BMT" className="w-9 h-9 rounded-full object-cover shadow-sm" />
+          <img src="/new-logo.jpeg" alt="BMT" className="h-10 w-10 rounded-full object-cover ring-1 ring-[#d4af37]/50" />
           <div>
-            <p className="text-sm font-bold text-gray-900">
-              Book<span className="text-[#b8952a]">My</span>Tabarruk
+            <p className="font-serif-display text-base font-bold leading-tight text-white">
+              Book<span className="text-[#d4af37]">My</span>Tabarruk
             </p>
-            <p className="text-[10px] text-gray-400 font-medium">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#d4af37]/80">
               {t('Choose a Store', 'स्टोर चुनें', lang)}
             </p>
           </div>
         </div>
       </header>
 
-      <div className="px-5 pt-6 space-y-6">
+      <div className="px-5 pt-7 space-y-8">
 
         {/* ── Active stores ── */}
         {activeStores.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />
-              <span className="text-[10px] font-extrabold tracking-[0.2em] text-[#b8952a]">
+            <div className="mb-4 flex items-center gap-3">
+              <span className="text-[11px] font-extrabold tracking-[0.24em] text-[#d4af37]">
                 {t('OPEN NOW', 'अभी उपलब्ध', lang)}
               </span>
-              <div className="h-px flex-1 bg-gradient-to-l from-gray-200 to-transparent" />
+              <div className="h-px flex-1 bg-gradient-to-r from-[#d4af37]/45 to-transparent" />
             </div>
-            <div className="space-y-3">
-              {activeStores.map((store, i) => (
-                <button
-                  key={store.id}
-                  id={`store-${store.slug}`}
-                  onClick={() => handleStoreSelect(store)}
-                  className="relative w-full overflow-hidden rounded-2xl text-left transition-all active:scale-[0.98] cursor-pointer shadow-md shadow-gray-100/50"
-                  style={{
-                    opacity: mounted ? 1 : 0,
-                    transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-                    transition: `opacity 0.5s ease ${i * 0.1}s, transform 0.5s ease ${i * 0.1}s`,
-                    background: 'white',
-                    border: '1px solid rgba(14,61,42,0.08)',
-                  }}
-                >
-                  {/* Accent glow on left edge */}
-                  <div
-                    className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
-                    style={{ background: store.theme_color || '#10b981' }}
-                  />
 
-                  <div className="flex items-center gap-4 p-4 pl-5">
+            <div className="flex flex-wrap gap-4">
+              {activeStores.map((store, i) => {
+                const accent = store.theme_color || GOLD
+                const logo = store.logo_url || STORE_LOGOS[store.slug]
+                return (
+                  <button
+                    key={store.id}
+                    id={`store-${store.slug}`}
+                    onClick={() => handleStoreSelect(store)}
+                    className="group relative flex aspect-square w-[calc(50%-0.5rem)] flex-col items-center justify-center gap-3 overflow-hidden rounded-3xl border p-4 text-center transition-all duration-200 hover:border-[#d4af37]/60 active:scale-[0.97]"
+                    style={{
+                      background: 'linear-gradient(160deg, rgba(24,56,37,0.75) 0%, rgba(8,28,20,0.65) 100%)',
+                      borderColor: 'rgba(212,175,55,0.22)',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+                      opacity: mounted ? 1 : 0,
+                      transform: mounted ? 'translateY(0)' : 'translateY(18px)',
+                      transition: `opacity 0.5s ease ${i * 0.08}s, transform 0.5s ease ${i * 0.08}s, border-color 0.2s`,
+                    }}
+                  >
+                    {/* accent glow */}
+                    <div
+                      className="pointer-events-none absolute -top-10 left-1/2 h-28 w-28 -translate-x-1/2 rounded-full blur-2xl"
+                      style={{ background: `${accent}40` }}
+                    />
+                    {/* corner CTA */}
+                    <span className="absolute right-2.5 top-2.5 flex size-7 items-center justify-center rounded-full bg-[#d4af37]/15 text-[#d4af37] transition-colors group-hover:bg-[#d4af37] group-hover:text-[#0a2018]">
+                      <ArrowUpRight className="size-4" />
+                    </span>
+
                     {/* Store logo / icon */}
                     <div
-                      className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl overflow-hidden"
-                      style={{ background: `${store.theme_color || '#10b981'}18`, border: `1px solid ${store.theme_color || '#10b981'}25` }}
+                      className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border"
+                      style={
+                        logo
+                          ? { background: '#0e0b08', borderColor: `${accent}45` }
+                          : { background: `${accent}22`, borderColor: `${accent}45` }
+                      }
                     >
-                      {store.logo_url ? (
+                      {logo ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={store.logo_url} alt={store.name} className="w-full h-full object-contain" />
+                        <img src={logo} alt={store.name} className="h-full w-full object-contain p-1.5" />
                       ) : (
-                        <StoreIcon slug={store.slug} active={true} color={store.theme_color || '#10b981'} />
+                        <StoreIcon slug={store.slug} color={accent} />
                       )}
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <h2 className="text-base font-extrabold text-gray-900">{store.name}</h2>
-                      <p className="text-xs text-gray-500 mt-0.5 truncate">{store.short_desc}</p>
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <span
-                          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider"
-                          style={{ background: `${store.theme_color || '#10b981'}12`, color: store.theme_color || '#10b981' }}
-                        >
-                          <span className="inline-block size-1.5 rounded-full bg-current animate-pulse" />
-                          {t('OPEN', 'खुला', lang)}
-                        </span>
-                      </div>
+                    <div className="relative min-w-0">
+                      <h2 className="font-serif-display text-[15px] font-bold leading-tight text-white transition-colors group-hover:text-[#f5d77a]">
+                        {store.name}
+                      </h2>
+                      <p className="mt-1 line-clamp-2 text-[10.5px] leading-snug text-white/45">
+                        {store.short_desc}
+                      </p>
                     </div>
 
-                    <ChevronRight className="size-5 shrink-0 text-gray-400" />
-                  </div>
-                </button>
-              ))}
+                    {/* OPEN badge */}
+                    <span
+                      className="relative inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[8.5px] font-bold tracking-[0.14em]"
+                      style={{ background: `${accent}2b`, color: accent }}
+                    >
+                      <span className="inline-block size-1.5 animate-pulse rounded-full bg-current" />
+                      {t('OPEN', 'खुला', lang)}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </section>
         )}
@@ -152,40 +175,40 @@ export default function StoresPage() {
         {/* ── Coming soon stores ── */}
         {comingSoon.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent" />
-              <span className="text-[10px] font-bold tracking-[0.2em] text-gray-400">
+            <div className="mb-4 flex items-center gap-3">
+              <span className="text-[11px] font-bold tracking-[0.24em] text-white/35">
                 {t('COMING SOON', 'जल्द आ रहा है', lang)}
               </span>
-              <div className="h-px flex-1 bg-gradient-to-l from-gray-200 to-transparent" />
+              <div className="h-px flex-1 bg-gradient-to-r from-white/15 to-transparent" />
             </div>
-            <div className="space-y-3">
+
+            <div className="flex flex-wrap gap-4">
               {comingSoon.map((store, i) => (
                 <div
                   key={store.id}
-                  className="relative w-full overflow-hidden rounded-2xl border border-gray-200/60 bg-gray-50/50"
+                  className="relative flex aspect-square w-[calc(50%-0.5rem)] flex-col items-center justify-center gap-3 overflow-hidden rounded-3xl border border-white/[0.07] bg-white/[0.025] p-4 text-center"
                   style={{
-                    opacity: mounted ? 0.7 : 0,
-                    transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-                    transition: `opacity 0.5s ease ${(activeStores.length + i) * 0.1 + 0.1}s, transform 0.5s ease ${(activeStores.length + i) * 0.1 + 0.1}s`,
+                    opacity: mounted ? 0.72 : 0,
+                    transform: mounted ? 'translateY(0)' : 'translateY(18px)',
+                    transition: `opacity 0.5s ease ${(activeStores.length + i) * 0.08 + 0.1}s, transform 0.5s ease ${(activeStores.length + i) * 0.08 + 0.1}s`,
                   }}
                 >
-                  <div className="flex items-center gap-4 p-4">
-                    {/* Greyscale icon */}
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gray-100 border border-gray-200">
-                      <StoreIcon slug={store.slug} active={false} color="#888" />
-                    </div>
+                  <span className="absolute right-2.5 top-2.5 flex size-7 items-center justify-center rounded-full bg-white/[0.04] text-white/30">
+                    <Lock className="size-3.5" />
+                  </span>
 
-                    <div className="flex-1 min-w-0">
-                      <h2 className="text-base font-extrabold text-gray-400">{store.name}</h2>
-                      <p className="text-xs text-gray-400/70 mt-0.5 truncate">{store.short_desc}</p>
-                      <span className="mt-2 inline-flex items-center rounded-full border border-amber-500/20 bg-amber-500/5 px-2 py-0.5 text-[9px] font-bold tracking-wider text-amber-600/70">
-                        {t('COMING SOON', 'जल्द आ रहा है', lang)}
-                      </span>
-                    </div>
+                  <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] grayscale">
+                    <StoreIcon slug={store.slug} color="#7f8a82" />
                   </div>
-                  {/* Overlay to make it look inactive */}
-                  <div className="absolute inset-0 bg-white/40 pointer-events-none rounded-2xl" />
+
+                  <div className="min-w-0">
+                    <h2 className="font-serif-display text-[15px] font-bold leading-tight text-white/45">{store.name}</h2>
+                    <p className="mt-1 line-clamp-2 text-[10.5px] leading-snug text-white/25">{store.short_desc}</p>
+                  </div>
+
+                  <span className="inline-flex items-center rounded-full border border-[#d4af37]/20 bg-[#d4af37]/[0.06] px-2.5 py-0.5 text-[8.5px] font-bold tracking-[0.14em] text-[#d4af37]/60">
+                    {t('SOON', 'जल्द', lang)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -194,21 +217,17 @@ export default function StoresPage() {
 
         {/* ── Bottom tagline ── */}
         <div
-          className="py-4"
-          style={{
-            opacity: mounted ? 1 : 0,
-            transition: 'opacity 0.8s ease 0.6s',
-          }}
+          className="pt-2"
+          style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.8s ease 0.6s' }}
         >
-          <div className="niyaz-bar text-[#b8952a]">
-            <style>{`.niyaz-bar { color: #b8952a; } .niyaz-bar::before, .niyaz-bar::after { background: linear-gradient(to right, transparent, #b8952a50, transparent); }`}</style>
+          <div className="niyaz-bar">
             {t('NIYAZ', 'नियाज़', lang)}
-            <span className="text-[#b8952a]/30">·</span>
+            <span className="opacity-40">·</span>
             {t('BARKAT', 'बरकत', lang)}
-            <span className="text-[#b8952a]/30">·</span>
+            <span className="opacity-40">·</span>
             {t('IBAADAT', 'इबादत', lang)}
           </div>
-          <p className="mt-2 text-center text-[9px] text-gray-400 tracking-widest font-semibold">
+          <p className="mt-2 text-center text-[9px] font-semibold tracking-[0.28em] text-[#d4af37]/40">
             BOOKMYTABARRUK
           </p>
         </div>
