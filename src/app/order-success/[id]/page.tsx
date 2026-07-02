@@ -1,7 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle, MapPin, X, ChevronRight } from 'lucide-react'
+import { CheckCircle, MapPin, X } from 'lucide-react'
+import BillCard from '@/components/BillCard'
+import BrandFooter from '@/components/BrandFooter'
+import Txt from '@/components/Txt'
 
 export default async function OrderSuccessPage({
   params,
@@ -22,9 +25,22 @@ export default async function OrderSuccessPage({
 
   if (!order) notFound()
 
+  // Store name for the bill header (BMT / house mark / store).
+  let storeName: string | null = null
+  if (order.store_id) {
+    const { data: store } = await supabase
+      .from('stores')
+      .select('name')
+      .eq('id', order.store_id)
+      .single()
+    storeName = store?.name ?? null
+  }
+
   const shortId = order.order_code || `#${id.slice(0, 8).toUpperCase()}`
   const addr = order.delivery_address as { address?: string; name?: string; payment?: string } | null
-  const paymentLabel = addr?.payment === 'card' ? 'Credit/Debit Card' : 'Cash on Delivery'
+  const paymentLabel = addr?.payment === 'card'
+    ? { en: 'Credit/Debit Card', hi: 'क्रेडिट/डेबिट कार्ड' }
+    : { en: 'Cash on Delivery', hi: 'डिलीवरी पर नकद' }
 
   return (
     <div className="min-h-[100dvh] phone-screen flex flex-col bg-[#0a0a0a] text-white pb-safe">
@@ -32,7 +48,7 @@ export default async function OrderSuccessPage({
       <header className="bg-neutral-900 sticky top-0 z-40 px-4 h-14 flex items-center justify-between border-b border-neutral-800">
         <div className="flex items-center gap-2 text-[#e23744]">
           <CheckCircle className="size-5" />
-          <span className="font-extrabold text-sm text-neutral-100">Order Placed</span>
+          <span className="font-extrabold text-sm text-neutral-100"><Txt en="Order Placed" hi="ऑर्डर हो गया" /></span>
         </div>
         <Link href="/menu" className="p-1 cursor-pointer text-neutral-400 hover:text-neutral-300">
           <X className="size-5" />
@@ -76,9 +92,9 @@ export default async function OrderSuccessPage({
 
         {/* Status text */}
         <div className="text-center px-6 mb-8">
-          <h2 className="text-xl font-extrabold text-white leading-tight">Order Placed Successfully!</h2>
+          <h2 className="text-xl font-extrabold text-white leading-tight"><Txt en="Order Placed Successfully!" hi="ऑर्डर सफलतापूर्वक हो गया!" /></h2>
           <p className="text-xs text-neutral-400 mt-2.5 leading-relaxed px-5 font-medium">
-            Your delicious meal is now being prepared by our chefs and will be on its way shortly.
+            <Txt en="Your delicious meal is now being prepared by our chefs and will be on its way shortly." hi="आपका स्वादिष्ट खाना हमारे शेफ तैयार कर रहे हैं और जल्द ही रवाना होगा।" />
           </p>
         </div>
 
@@ -86,12 +102,12 @@ export default async function OrderSuccessPage({
         <div className="bg-neutral-900 rounded-3xl p-5 mx-4 space-y-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-neutral-800">
           <div className="flex justify-between items-center text-xs">
             <div>
-              <span className="text-neutral-400 font-bold tracking-wider uppercase block">Order ID</span>
+              <span className="text-neutral-400 font-bold tracking-wider uppercase block"><Txt en="Order ID" hi="ऑर्डर आईडी" /></span>
               <span className="text-sm font-extrabold text-white font-mono mt-0.5 block">{shortId}</span>
             </div>
             <div className="text-right">
-              <span className="text-neutral-400 font-bold tracking-wider uppercase block">Estimated Delivery</span>
-              <span className="text-sm font-extrabold text-[#e23744] mt-0.5 block">25 – 35 mins</span>
+              <span className="text-neutral-400 font-bold tracking-wider uppercase block"><Txt en="Estimated Delivery" hi="अनुमानित डिलीवरी" /></span>
+              <span className="text-sm font-extrabold text-[#e23744] mt-0.5 block"><Txt en="25 – 35 mins" hi="25 – 35 मिनट" /></span>
             </div>
           </div>
 
@@ -101,15 +117,15 @@ export default async function OrderSuccessPage({
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-[#0a0a0a] rounded-2xl p-3 flex flex-col gap-1 border border-neutral-800/50">
               <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wide flex items-center gap-1.5">
-                🚚 Courier
+                🚚 <Txt en="Courier" hi="कूरियर" />
               </span>
               <p className="text-xs font-extrabold text-white">Alex Johnson</p>
             </div>
             <div className="bg-[#0a0a0a] rounded-2xl p-3 flex flex-col gap-1 border border-neutral-800/50">
               <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wide flex items-center gap-1.5">
-                💳 Payment
+                💳 <Txt en="Payment" hi="भुगतान" />
               </span>
-              <p className="text-xs font-extrabold text-white truncate">{paymentLabel}</p>
+              <p className="text-xs font-extrabold text-white truncate"><Txt en={paymentLabel.en} hi={paymentLabel.hi} /></p>
             </div>
           </div>
 
@@ -120,11 +136,16 @@ export default async function OrderSuccessPage({
                 <MapPin className="size-4.5 text-[#e23744]" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold text-[#e23744] uppercase tracking-wider">Delivery Address</p>
+                <p className="text-[10px] font-bold text-[#e23744] uppercase tracking-wider"><Txt en="Delivery Address" hi="डिलीवरी पता" /></p>
                 <p className="text-xs font-bold text-neutral-100 leading-normal mt-0.5">{addr.address}</p>
               </div>
             </div>
           )}
+        </div>
+
+        {/* Customer bill — item prices + paid/unpaid (40% advance) split */}
+        <div className="mt-4 px-4">
+          <BillCard order={order} storeName={storeName} />
         </div>
 
         {/* Navigation CTAs */}
@@ -136,7 +157,7 @@ export default async function OrderSuccessPage({
             <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L16 4m0 13V4m0 0L9 7" />
             </svg>
-            <span>Track Order</span>
+            <span><Txt en="Track Order" hi="ऑर्डर ट्रैक करें" /></span>
           </Link>
           <Link
             href="/menu"
@@ -145,9 +166,11 @@ export default async function OrderSuccessPage({
             <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            <span>Back to Home</span>
+            <span><Txt en="Back to Home" hi="होम पर वापस" /></span>
           </Link>
         </div>
+
+        <BrandFooter className="mt-6" />
       </div>
     </div>
   )

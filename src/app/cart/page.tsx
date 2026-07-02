@@ -4,11 +4,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Minus, Plus, Trash2, ArrowRight, ShoppingBag, Loader2, Store } from 'lucide-react'
-import { useCart, useHydrated, cartTotal } from '@/lib/k14-store'
+import { useCart, useHydrated, cartTotal, useLanguage, t } from '@/lib/k14-store'
 import { createClient } from '@/lib/supabase/client'
 import { money } from '@/lib/format'
 import { placeholderImage } from '@/lib/placeholder-image'
 import BottomNav from '@/components/BottomNav'
+import BrandFooter from '@/components/BrandFooter'
 
 const SERVICE_FEE = 20
 
@@ -16,6 +17,7 @@ export default function CartPage() {
   const router = useRouter()
   const { items, setQty, remove } = useCart()
   const hydrated = useHydrated()
+  const { lang } = useLanguage()
   const subtotal = hydrated ? cartTotal(items) : 0
   const fee = items.length > 0 ? SERVICE_FEE : 0
   const total = subtotal + fee
@@ -50,10 +52,10 @@ export default function CartPage() {
         <Link href="/stores" aria-label="Back" className="text-white/70 hover:text-white">
           <ChevronLeft className="size-5" />
         </Link>
-        <h1 className="font-serif-display text-xl font-bold text-white flex-1">Your Tabarruk Cart</h1>
+        <h1 className="font-serif-display text-xl font-bold text-white flex-1">{t('Your Tabarruk Cart', 'आपका तबर्रुक कार्ट', lang)}</h1>
         {hydrated && items.length > 0 && (
           <span className="rounded-full bg-[#d4af37]/15 border border-[#d4af37]/30 px-2 py-0.5 text-[10px] font-bold text-[#d4af37]">
-            {items.reduce((n, i) => n + i.qty, 0)} items
+            {items.reduce((n, i) => n + i.qty, 0)} {t('items', 'वस्तुएँ', lang)}
           </span>
         )}
       </header>
@@ -62,13 +64,13 @@ export default function CartPage() {
         /* ── Empty state ── */
         <div className="flex flex-col items-center justify-center px-6 py-28 text-center">
           <ShoppingBag className="size-12 text-white/15" />
-          <p className="mt-4 text-base font-bold text-white/40">Your cart is empty</p>
-          <p className="mt-1 text-xs text-white/25">Add items from a store to get started</p>
+          <p className="mt-4 text-base font-bold text-white/40">{t('Your cart is empty', 'आपका कार्ट खाली है', lang)}</p>
+          <p className="mt-1 text-xs text-white/25">{t('Add items from a store to get started', 'शुरू करने के लिए किसी दुकान से वस्तुएँ जोड़ें', lang)}</p>
           <Link
             href="/stores"
             className="mt-6 rounded-xl bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] px-6 py-3 text-sm font-bold text-[#1a1206]"
           >
-            Browse Stores
+            {t('Browse Stores', 'दुकानें देखें', lang)}
           </Link>
         </div>
       ) : (
@@ -82,7 +84,7 @@ export default function CartPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <Store className="size-3.5 text-emerald-400/60" />
                     <span className="text-[10px] font-bold tracking-[0.15em] text-emerald-400/60 uppercase">
-                      {storeId === '__unknown__' ? 'Items' : `Store · ${storeId.slice(0, 8).toUpperCase()}`}
+                      {storeId === '__unknown__' ? t('Items', 'वस्तुएँ', lang) : `${t('Store', 'दुकान', lang)} · ${storeId.slice(0, 8).toUpperCase()}`}
                     </span>
                     <div className="flex-1 h-px bg-white/5" />
                   </div>
@@ -137,15 +139,15 @@ export default function CartPage() {
           {/* ── Summary ── */}
           <div className="mx-5 mt-6 rounded-2xl border border-white/10 bg-[#17120c] p-4 text-sm">
             <div className="flex justify-between text-white/60">
-              <span>Subtotal</span>
+              <span>{t('Subtotal', 'उप-योग', lang)}</span>
               <span>{money(subtotal)}</span>
             </div>
             <div className="mt-2 flex justify-between text-white/60">
-              <span>Service fee</span>
+              <span>{t('Service fee', 'सेवा शुल्क', lang)}</span>
               <span>{money(fee)}</span>
             </div>
             <div className="mt-3 flex justify-between border-t border-white/10 pt-3 text-base font-bold">
-              <span>Total</span>
+              <span>{t('Total', 'कुल', lang)}</span>
               <span className="text-[#d4af37]">{money(total)}</span>
             </div>
           </div>
@@ -161,12 +163,13 @@ export default function CartPage() {
               {proceeding ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
-                <>Proceed to Checkout <ArrowRight className="size-4" /></>
+                <>{t('Proceed to Checkout', 'चेकआउट करें', lang)} <ArrowRight className="size-4" /></>
               )}
             </button>
           </div>
         </>
       )}
+      <BrandFooter className="pb-24" />
       <BottomNav />
     </div>
   )

@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { MapPin, Search, ChevronRight, History, HelpCircle, LogOut, X, Phone, User as UserIcon, Mail } from 'lucide-react'
 import BottomNav from '@/components/BottomNav'
+import BrandFooter from '@/components/BrandFooter'
 import { toast } from 'sonner'
+import { useLanguage, t } from '@/lib/k14-store'
 
 export default function ProfilePage() {
   const router = useRouter()
+  const { lang } = useLanguage()
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [orderCount, setOrderCount] = useState<number>(0)
@@ -66,7 +69,7 @@ export default function ProfilePage() {
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    toast.success('Logged out successfully')
+    toast.success(t('Logged out successfully', 'सफलतापूर्वक लॉग आउट हो गए', lang))
     router.push('/login')
     router.refresh()
   }
@@ -74,7 +77,7 @@ export default function ProfilePage() {
   async function handleSaveProfile(e: React.SyntheticEvent) {
     e.preventDefault()
     if (!editName.trim()) {
-      toast.error('Name cannot be empty')
+      toast.error(t('Name cannot be empty', 'नाम खाली नहीं हो सकता', lang))
       return
     }
 
@@ -105,9 +108,9 @@ export default function ProfilePage() {
         phone: editPhone.trim(),
       }))
       setIsEditing(false)
-      toast.success('Profile updated successfully!')
+      toast.success(t('Profile updated successfully!', 'प्रोफ़ाइल सफलतापूर्वक अपडेट हुई!', lang))
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update profile')
+      toast.error(err.message || t('Failed to update profile', 'प्रोफ़ाइल अपडेट नहीं हो सकी', lang))
     } finally {
       setSaving(false)
     }
@@ -117,7 +120,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-[100dvh] phone-screen flex flex-col items-center justify-center bg-[#030504]">
         <div className="w-10 h-10 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs text-neutral-400 mt-3 font-semibold">Loading profile...</p>
+        <p className="text-xs text-neutral-400 mt-3 font-semibold">{t('Loading profile...', 'प्रोफ़ाइल लोड हो रही है...', lang)}</p>
       </div>
     )
   }
@@ -172,7 +175,7 @@ export default function ProfilePage() {
               onClick={() => setIsEditing(true)}
               className="mt-4 text-sm font-bold text-[#d4af37] hover:underline"
             >
-              + Add your name
+              + {t('Add your name', 'अपना नाम जोड़ें', lang)}
             </button>
           )}
 
@@ -184,7 +187,7 @@ export default function ProfilePage() {
               onClick={() => setIsEditing(true)}
               className="text-xs text-neutral-500 font-medium mt-1 hover:text-neutral-300"
             >
-              + Add your email
+              + {t('Add your email', 'अपना ईमेल जोड़ें', lang)}
             </button>
           )}
 
@@ -198,7 +201,7 @@ export default function ProfilePage() {
               onClick={() => setIsEditing(true)}
               className="mt-2.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide text-neutral-400 bg-neutral-900 hover:text-neutral-200"
             >
-              + Add your phone
+              + {t('Add your phone', 'अपना फ़ोन जोड़ें', lang)}
             </button>
           )}
         </div>
@@ -208,7 +211,7 @@ export default function ProfilePage() {
           <div className="bg-[#0a1812] rounded-2xl p-4 text-center border border-emerald-900/20 flex flex-col justify-center">
             <span className="text-2xl font-extrabold text-[#d4af37]">{orderCount}</span>
             <span className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase mt-0.5">
-              {orderCount === 1 ? 'Order' : 'Orders'}
+              {orderCount === 1 ? t('Order', 'ऑर्डर', lang) : t('Orders', 'ऑर्डर', lang)}
             </span>
           </div>
         </div>
@@ -216,10 +219,10 @@ export default function ProfilePage() {
         {/* Options List */}
         <div className="px-4 space-y-2.5 mb-6">
           {[
-            { label: 'Saved Addresses', icon: MapPin, color: 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30', href: '/location' },
-            { label: 'Order History', icon: History, color: 'bg-[#2a2410] text-[#d4af37] border-[#3a3420]/30', href: '/orders' },
-            { label: 'Help & Support', icon: HelpCircle, color: 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30', onClick: () => setActiveModal('support') },
-            { label: 'Logout', icon: LogOut, color: 'bg-red-950/30 text-red-400 border-red-900/20', onClick: handleLogout },
+            { label: t('Saved Addresses', 'सहेजे गए पते', lang), icon: MapPin, color: 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30', href: '/location' },
+            { label: t('Order History', 'ऑर्डर इतिहास', lang), icon: History, color: 'bg-[#2a2410] text-[#d4af37] border-[#3a3420]/30', href: '/orders' },
+            { label: t('Help & Support', 'सहायता', lang), icon: HelpCircle, color: 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30', onClick: () => setActiveModal('support') },
+            { label: t('Logout', 'लॉग आउट', lang), icon: LogOut, color: 'bg-red-950/30 text-red-400 border-red-900/20', onClick: handleLogout },
           ].map((opt, i) => {
             const Icon = opt.icon
             return (
@@ -243,6 +246,7 @@ export default function ProfilePage() {
           })}
         </div>
 
+        <BrandFooter />
       </div>
 
       {/* ── Edit Profile Modal ── */}
@@ -250,7 +254,7 @@ export default function ProfilePage() {
         <div className="absolute inset-0 bg-black/60 z-50 flex items-end justify-center transition-all duration-300">
           <div className="bg-[#0a1812] w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-emerald-900/30 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="text-base font-extrabold text-white">Edit Profile</h3>
+              <h3 className="text-base font-extrabold text-white">{t('Edit Profile', 'प्रोफ़ाइल संपादित करें', lang)}</h3>
               <button
                 onClick={() => setIsEditing(false)}
                 className="p-1 rounded-full hover:bg-white/5 transition-colors cursor-pointer"
@@ -261,7 +265,7 @@ export default function ProfilePage() {
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Full Name</label>
+                <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">{t('Full Name', 'पूरा नाम', lang)}</label>
                 <div className="relative">
                   <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#d4af37]/60" />
                   <input
@@ -269,14 +273,14 @@ export default function ProfilePage() {
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     className="w-full h-11 pl-10 pr-4 bg-black/30 border border-emerald-900/30 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#d4af37] text-white placeholder:text-white/20 transition-all"
-                    placeholder="Enter your name"
+                    placeholder={t('Enter your name', 'अपना नाम दर्ज करें', lang)}
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Email</label>
+                <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">{t('Email', 'ईमेल', lang)}</label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#d4af37]/60" />
                   <input
@@ -284,13 +288,13 @@ export default function ProfilePage() {
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
                     className="w-full h-11 pl-10 pr-4 bg-black/30 border border-emerald-900/30 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#d4af37] text-white placeholder:text-white/20 transition-all"
-                    placeholder="Enter your email"
+                    placeholder={t('Enter your email', 'अपना ईमेल दर्ज करें', lang)}
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Phone Number</label>
+                <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">{t('Phone Number', 'फ़ोन नंबर', lang)}</label>
                 <div className="relative">
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#d4af37]/60" />
                   <input
@@ -298,7 +302,7 @@ export default function ProfilePage() {
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
                     className="w-full h-11 pl-10 pr-4 bg-black/30 border border-emerald-900/30 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#d4af37] text-white placeholder:text-white/20 transition-all"
-                    placeholder="Enter phone number"
+                    placeholder={t('Enter phone number', 'फ़ोन नंबर दर्ज करें', lang)}
                   />
                 </div>
               </div>
@@ -312,10 +316,10 @@ export default function ProfilePage() {
                   {saving ? (
                     <>
                       <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                      Saving changes...
+                      {t('Saving changes...', 'सहेजा जा रहा है...', lang)}
                     </>
                   ) : (
-                    'Save Changes'
+                    t('Save Changes', 'बदलाव सहेजें', lang)
                   )}
                 </button>
               </div>
@@ -329,7 +333,7 @@ export default function ProfilePage() {
         <div className="absolute inset-0 bg-black/60 z-50 flex items-end justify-center transition-all duration-300">
           <div className="bg-[#0a1812] w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-emerald-900/30 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="text-base font-extrabold text-white">Help & Support</h3>
+              <h3 className="text-base font-extrabold text-white">{t('Help & Support', 'सहायता', lang)}</h3>
               <button
                 onClick={() => setActiveModal(null)}
                 className="p-1 rounded-full hover:bg-white/5 transition-colors cursor-pointer"
@@ -339,14 +343,13 @@ export default function ProfilePage() {
             </div>
 
             <p className="text-xs text-neutral-400 leading-relaxed font-semibold">
-              Need help with an order? Reach out to the BookMyTabarruk kitchen and the team
-              will assist you.
+              {t('Need help with an order? Reach out to the BookMyTabarruk kitchen and the team will assist you.', 'ऑर्डर में मदद चाहिए? BookMyTabarruk रसोई से संपर्क करें, टीम आपकी सहायता करेगी।', lang)}
             </p>
             <button
-              onClick={() => toast.info('Support contact coming soon')}
+              onClick={() => toast.info(t('Support contact coming soon', 'सहायता संपर्क जल्द आ रहा है', lang))}
               className="w-full h-11 bg-emerald-950/40 hover:bg-emerald-900/30 text-emerald-400 text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-colors border border-emerald-900/30"
             >
-              Contact Support
+              {t('Contact Support', 'सहायता से संपर्क करें', lang)}
             </button>
           </div>
         </div>

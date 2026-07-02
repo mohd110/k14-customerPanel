@@ -8,7 +8,9 @@ import { Order, OrderStatus } from '@/lib/types'
 import Link from 'next/link'
 import { ChevronLeft, Search, HelpCircle, Phone, MessageSquare, Star, Clock, Check, ChefHat, Bike, Compass } from 'lucide-react'
 import BottomNav from '@/components/BottomNav'
+import BrandFooter from '@/components/BrandFooter'
 import { orderNumber } from '@/lib/format'
+import { useLanguage, t } from '@/lib/k14-store'
 
 export default function OrderTrackingPage({
   params,
@@ -17,6 +19,7 @@ export default function OrderTrackingPage({
 }) {
   const router = useRouter()
   const { id } = use(params)
+  const { lang } = useLanguage()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -66,7 +69,7 @@ export default function OrderTrackingPage({
     return (
       <div className="min-h-[100dvh] phone-screen flex flex-col items-center justify-center bg-[#0a0a0a]">
         <div className="w-10 h-10 border-4 border-[#e23744] border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs text-neutral-400 mt-3 font-semibold">Loading tracking info...</p>
+        <p className="text-xs text-neutral-400 mt-3 font-semibold">{t('Loading tracking info...', 'ट्रैकिंग जानकारी लोड हो रही है...', lang)}</p>
       </div>
     )
   }
@@ -75,10 +78,10 @@ export default function OrderTrackingPage({
     return (
       <div className="min-h-[100dvh] phone-screen flex flex-col items-center justify-center bg-[#0a0a0a] px-5 text-center">
         <span className="text-5xl mb-3">📍</span>
-        <h2 className="text-sm font-extrabold text-white mb-1">Order Not Found</h2>
-        <p className="text-xs text-neutral-400 mb-6 font-medium">This order might not exist or belongs to another user.</p>
+        <h2 className="text-sm font-extrabold text-white mb-1">{t('Order Not Found', 'ऑर्डर नहीं मिला', lang)}</h2>
+        <p className="text-xs text-neutral-400 mb-6 font-medium">{t('This order might not exist or belongs to another user.', 'यह ऑर्डर मौजूद नहीं है या किसी अन्य उपयोगकर्ता का है।', lang)}</p>
         <button onClick={() => router.push('/orders')} className="px-6 py-2.5 bg-[#e23744] text-white font-bold rounded-xl cursor-pointer">
-          Go to Orders
+          {t('Go to Orders', 'ऑर्डर पर जाएँ', lang)}
         </button>
       </div>
     )
@@ -111,7 +114,7 @@ export default function OrderTrackingPage({
           <button onClick={() => router.back()} className="p-1 -ml-1 cursor-pointer">
             <ChevronLeft className="size-6 text-[#e23744]" />
           </button>
-          <h1 className="text-base font-extrabold text-[#e23744]">Track Order</h1>
+          <h1 className="text-base font-extrabold text-[#e23744]">{t('Track Order', 'ऑर्डर ट्रैक करें', lang)}</h1>
         </div>
         <div className="flex items-center gap-1">
           <button className="p-1.5 hover:bg-neutral-800 rounded-full transition-colors cursor-pointer">
@@ -145,14 +148,14 @@ export default function OrderTrackingPage({
 
           {/* ── Estimated Arrival Card ── */}
           <div className="bg-neutral-900 rounded-3xl p-5 text-center shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-neutral-800/50">
-            <p className="text-[10px] font-extrabold tracking-wider text-neutral-400 uppercase">Estimated Arrival</p>
+            <p className="text-[10px] font-extrabold tracking-wider text-neutral-400 uppercase">{t('Estimated Arrival', 'अनुमानित समय', lang)}</p>
             <h2 className="text-3xl font-black text-[#e23744] mt-1.5 tracking-tight">{etaTimeStr}</h2>
             <p className="text-xs text-neutral-400 font-bold mt-2">
-              {status === 'pending' && 'We are confirming your order...'}
-              {(status === 'accepted' || status === 'preparing') && 'Your meal is being prepared with love!'}
-              {(status === 'ready' || status === 'out_for_delivery') && 'Your order is on its way to you!'}
-              {status === 'delivered' && 'Your order has arrived. Enjoy your meal!'}
-              {status === 'cancelled' && 'This order was cancelled.'}
+              {status === 'pending' && t('We are confirming your order...', 'हम आपके ऑर्डर की पुष्टि कर रहे हैं...', lang)}
+              {(status === 'accepted' || status === 'preparing') && t('Your meal is being prepared with love!', 'आपका खाना प्यार से तैयार किया जा रहा है!', lang)}
+              {(status === 'ready' || status === 'out_for_delivery') && t('Your order is on its way to you!', 'आपका ऑर्डर आपके पास आ रहा है!', lang)}
+              {status === 'delivered' && t('Your order has arrived. Enjoy your meal!', 'आपका ऑर्डर पहुँच गया। भोजन का आनंद लें!', lang)}
+              {status === 'cancelled' && t('This order was cancelled.', 'यह ऑर्डर रद्द कर दिया गया।', lang)}
             </p>
           </div>
 
@@ -188,19 +191,19 @@ export default function OrderTrackingPage({
 
           {/* ── Delivery Status Stepper ── */}
           <div className="bg-neutral-900 rounded-3xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-neutral-800/50">
-            <h3 className="text-sm font-extrabold text-white mb-5 px-0.5">Delivery Status</h3>
-            
+            <h3 className="text-sm font-extrabold text-white mb-5 px-0.5">{t('Delivery Status', 'डिलीवरी स्थिति', lang)}</h3>
+
             {status === 'cancelled' ? (
               <div className="py-4 text-center text-[#e23744] font-bold text-xs">
-                ❌ This order has been cancelled.
+                ❌ {t('This order has been cancelled.', 'यह ऑर्डर रद्द कर दिया गया है।', lang)}
               </div>
             ) : (
               <div className="relative space-y-6 pl-8">
                 {[
-                  { label: 'Order Received', desc: 'We have confirmed your order and started preparing.' },
-                  { label: 'Preparing your food', desc: 'Our chefs are cooking your order fresh.' },
-                  { label: 'Out for Delivery', desc: 'Rider is on the way to pick up and deliver your meal.' },
-                  { label: 'Arrived at Home', desc: `Expected arrival at ${etaTimeStr}` },
+                  { label: t('Order Received', 'ऑर्डर प्राप्त', lang), desc: t('We have confirmed your order and started preparing.', 'हमने आपका ऑर्डर पक्का कर तैयारी शुरू कर दी है।', lang) },
+                  { label: t('Preparing your food', 'आपका खाना बन रहा है', lang), desc: t('Our chefs are cooking your order fresh.', 'हमारे शेफ आपका ऑर्डर ताज़ा बना रहे हैं।', lang) },
+                  { label: t('Out for Delivery', 'डिलीवरी के लिए निकला', lang), desc: t('Rider is on the way to pick up and deliver your meal.', 'राइडर आपका खाना लेने और पहुँचाने के रास्ते में है।', lang) },
+                  { label: t('Arrived at Home', 'घर पहुँच गया', lang), desc: t(`Expected arrival at ${etaTimeStr}`, `अनुमानित आगमन ${etaTimeStr} पर`, lang) },
                 ].map((step, i) => {
                   const done = i <= currentStep
                   
@@ -232,7 +235,7 @@ export default function OrderTrackingPage({
                         </h4>
                         <p className={`text-[10px] leading-relaxed mt-0.5 transition-colors ${done ? 'text-neutral-400' : 'text-neutral-500'}`}>
                           {i === 0 && done
-                            ? `${new Date(order.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} &bull; We've confirmed your order`
+                            ? `${new Date(order.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} • ${t("We've confirmed your order", 'हमने आपका ऑर्डर पक्का कर दिया', lang)}`
                             : step.desc}
                         </p>
                       </div>
@@ -250,9 +253,9 @@ export default function OrderTrackingPage({
                 📄
               </div>
               <div>
-                <h4 className="text-xs font-extrabold text-white break-all">Order {orderNumber(order)}</h4>
+                <h4 className="text-xs font-extrabold text-white break-all">{t('Order', 'ऑर्डर', lang)} {orderNumber(order)}</h4>
                 <p className="text-[10px] text-neutral-400 font-bold mt-0.5">
-                  {itemsCount} {itemsCount === 1 ? 'item' : 'items'} &bull; ₹{order.total}
+                  {itemsCount} {itemsCount === 1 ? t('item', 'वस्तु', lang) : t('items', 'वस्तुएँ', lang)} &bull; ₹{order.total}
                 </p>
               </div>
             </div>
@@ -260,11 +263,13 @@ export default function OrderTrackingPage({
               href={`/order-success/${order.id}`}
               className="text-xs font-extrabold text-[#e23744] hover:underline cursor-pointer flex-shrink-0"
             >
-              View Details
+              {t('View Details', 'विवरण देखें', lang)}
             </Link>
           </div>
 
         </div>
+
+        <BrandFooter />
       </div>
 
       <BottomNav />

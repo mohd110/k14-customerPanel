@@ -1,11 +1,14 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans, Playfair_Display, Noto_Sans_Devanagari } from 'next/font/google'
+import { Montserrat, Playfair_Display, Noto_Sans_Devanagari } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 import { Providers } from '@/components/providers'
 import BackgroundMusic from '@/components/BackgroundMusic'
 
-const plusJakarta = Plus_Jakarta_Sans({
+// Gotham family requested; Gotham is licensed/not on Google Fonts, so we use
+// Montserrat — the closest free geometric match. Keeps the --font-plus-jakarta
+// CSS var name so existing globals.css references keep working.
+const plusJakarta = Montserrat({
   variable: '--font-plus-jakarta',
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],

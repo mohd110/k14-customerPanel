@@ -142,16 +142,18 @@
     @apply bg-background text-foreground;
     background-color: #000000;
     color: #ffffff;
-    font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: var(--font-plus-jakarta), 'Montserrat', system-ui, sans-serif;
   }
   html {
-    font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: var(--font-plus-jakarta), 'Montserrat', system-ui, sans-serif;
   }
 }
 
 /* ── BMT / K14 brand helpers ── */
+/* Kept the class name for existing markup, but points at Montserrat so the
+   whole app uses ONE consistent font family (no Playfair serif accents). */
 .font-serif-display {
-  font-family: var(--font-playfair), 'Playfair Display', Georgia, serif;
+  font-family: var(--font-plus-jakarta), 'Montserrat', system-ui, sans-serif;
 }
 .text-gold {
   color: #d4af37;

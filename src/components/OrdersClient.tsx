@@ -7,18 +7,19 @@ import { Order, OrderStatus } from '@/lib/types'
 import Link from 'next/link'
 import { CheckCircle, ChefHat, Bike, Package, Clock, ArrowRight, ThumbsUp } from 'lucide-react'
 import { orderNumber } from '@/lib/format'
+import { useLanguage, t } from '@/lib/k14-store'
 
 interface Props {
   initialOrders: Order[]
   userId: string
 }
 
-const STATUS_STEPS: { status: OrderStatus; label: string; icon: React.ElementType }[] = [
-  { status: 'pending', label: 'Received', icon: Package },
-  { status: 'accepted', label: 'Accepted', icon: ThumbsUp },
-  { status: 'preparing', label: 'Preparing', icon: ChefHat },
-  { status: 'out_for_delivery', label: 'On the Way', icon: Bike },
-  { status: 'delivered', label: 'Arrived', icon: CheckCircle },
+const STATUS_STEPS: { status: OrderStatus; label: string; hi: string; icon: React.ElementType }[] = [
+  { status: 'pending', label: 'Received', hi: 'प्राप्त', icon: Package },
+  { status: 'accepted', label: 'Accepted', hi: 'स्वीकृत', icon: ThumbsUp },
+  { status: 'preparing', label: 'Preparing', hi: 'बन रहा', icon: ChefHat },
+  { status: 'out_for_delivery', label: 'On the Way', hi: 'रास्ते में', icon: Bike },
+  { status: 'delivered', label: 'Arrived', hi: 'पहुँच गया', icon: CheckCircle },
 ]
 
 function statusIndex(status: OrderStatus) {
@@ -27,7 +28,7 @@ function statusIndex(status: OrderStatus) {
   return STATUS_STEPS.findIndex((s) => s.status === status)
 }
 
-function OrderStepper({ status }: { status: OrderStatus }) {
+function OrderStepper({ status, lang }: { status: OrderStatus; lang: 'en' | 'hi' }) {
   const current = statusIndex(status)
   return (
     <div className="flex items-center justify-between mt-3 mb-1">
@@ -46,7 +47,7 @@ function OrderStepper({ status }: { status: OrderStatus }) {
               <Icon className={`size-3.5 ${done ? 'text-white' : 'text-[#afafaf]'}`} strokeWidth={active ? 2.5 : 2} />
             </div>
             <span className={`text-[9px] font-semibold mt-1 text-center leading-tight ${done ? 'text-[#e23744]' : 'text-[#afafaf]'}`}>
-              {step.label}
+              {lang === 'hi' ? step.hi : step.label}
             </span>
           </div>
         )
@@ -55,21 +56,23 @@ function OrderStepper({ status }: { status: OrderStatus }) {
   )
 }
 
-function statusLabel(status: OrderStatus) {
-  const map: Record<OrderStatus, string> = {
-    pending: 'Order Received',
-    accepted: 'Accepted',
-    preparing: 'Being Prepared',
-    ready: 'Ready',
-    out_for_delivery: 'On the Way',
-    delivered: 'Delivered',
-    cancelled: 'Cancelled',
+function statusLabel(status: OrderStatus, lang: 'en' | 'hi') {
+  const map: Record<OrderStatus, [string, string]> = {
+    pending: ['Order Received', 'ऑर्डर प्राप्त'],
+    accepted: ['Accepted', 'स्वीकृत'],
+    preparing: ['Being Prepared', 'बनाया जा रहा है'],
+    ready: ['Ready', 'तैयार'],
+    out_for_delivery: ['On the Way', 'रास्ते में'],
+    delivered: ['Delivered', 'डिलीवर हो गया'],
+    cancelled: ['Cancelled', 'रद्द'],
   }
-  return map[status] ?? status
+  const pair = map[status]
+  return pair ? t(pair[0], pair[1], lang) : status
 }
 
 export default function OrdersClient({ initialOrders, userId }: Props) {
   const [orders, setOrders] = useState<Order[]>(initialOrders)
+  const { lang } = useLanguage()
 
   useEffect(() => {
     const supabase = createClient()
@@ -92,13 +95,13 @@ export default function OrdersClient({ initialOrders, userId }: Props) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <span className="text-6xl mb-4">📋</span>
-        <p className="font-bold text-[#ffffff] mb-1">No orders yet</p>
-        <p className="text-sm text-[#b5b5b5] mb-6">Your order history will appear here</p>
+        <p className="font-bold text-[#ffffff] mb-1">{t('No orders yet', 'अभी कोई ऑर्डर नहीं', lang)}</p>
+        <p className="text-sm text-[#b5b5b5] mb-6">{t('Your order history will appear here', 'आपका ऑर्डर इतिहास यहाँ दिखेगा', lang)}</p>
         <Link
           href="/menu"
           className="h-12 px-8 bg-[#e23744] text-white font-semibold rounded-lg flex items-center gap-2"
         >
-          Browse Menu <ArrowRight className="size-4" />
+          {t('Browse Menu', 'मेन्यू देखें', lang)} <ArrowRight className="size-4" />
         </Link>
       </div>
     )
@@ -124,14 +127,14 @@ export default function OrdersClient({ initialOrders, userId }: Props) {
                 order.status === 'delivered' ? 'bg-[#10241a] text-green-400' :
                 'bg-[#2a1416] text-[#e23744]'
               }`}>
-                {statusLabel(order.status as OrderStatus)}
+                {statusLabel(order.status as OrderStatus, lang)}
               </span>
             </div>
 
             {/* Stepper */}
             {!isCancelled && (
               <div className="px-4 pb-2">
-                <OrderStepper status={order.status as OrderStatus} />
+                <OrderStepper status={order.status as OrderStatus} lang={lang} />
               </div>
             )}
 
@@ -147,7 +150,7 @@ export default function OrdersClient({ initialOrders, userId }: Props) {
                       .join(', ')}
               </p>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] text-[#b5b5b5]">Total Paid</span>
+                <span className="text-[10px] text-[#b5b5b5]">{t('Total', 'कुल', lang)}</span>
                 <span className="font-bold text-[#e23744] text-sm">₹{order.total}</span>
               </div>
             </div>
@@ -160,7 +163,7 @@ export default function OrdersClient({ initialOrders, userId }: Props) {
           href="/menu"
           className="h-11 px-6 border-2 border-[#e23744] text-[#e23744] font-semibold rounded-xl inline-flex items-center gap-1 active:scale-95 transition-transform"
         >
-          Order Again <ArrowRight className="size-4" />
+          {t('Order Again', 'फिर ऑर्डर करें', lang)} <ArrowRight className="size-4" />
         </Link>
       </div>
     </div>

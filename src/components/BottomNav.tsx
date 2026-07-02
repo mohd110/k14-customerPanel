@@ -3,19 +3,20 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Store, ShoppingBag, History, User } from 'lucide-react'
-import { useCart, useHydrated, cartCount } from '@/lib/k14-store'
+import { useCart, useHydrated, cartCount, useLanguage, t } from '@/lib/k14-store'
 
 export default function BottomNav() {
   const pathname = usePathname()
   const items = useCart((s) => s.items)
   const hydrated = useHydrated()
   const count = hydrated ? cartCount(items) : 0
+  const { lang } = useLanguage()
 
   const tabs = [
-    { href: '/stores', icon: Store, label: 'Stores', id: 'nav-stores' },
-    { href: '/cart', icon: ShoppingBag, label: 'Cart', id: 'nav-cart' },
-    { href: '/orders', icon: History, label: 'Orders', id: 'nav-orders' },
-    { href: '/profile', icon: User, label: 'Profile', id: 'nav-profile' },
+    { href: '/stores', icon: Store, label: t('Stores', 'दुकानें', lang), id: 'nav-stores' },
+    { href: '/cart', icon: ShoppingBag, label: t('Cart', 'कार्ट', lang), id: 'nav-cart' },
+    { href: '/orders', icon: History, label: t('Orders', 'ऑर्डर', lang), id: 'nav-orders' },
+    { href: '/profile', icon: User, label: t('Profile', 'प्रोफ़ाइल', lang), id: 'nav-profile' },
   ]
 
   return (

@@ -123,6 +123,8 @@ export default function DashboardClient({ initialOrders }: Props) {
         const transition = TRANSITIONS[order.status as OrderStatus]
         const borderClass = statusBg[order.status as OrderStatus] ?? 'border-l-gray-300'
         const address = (order as any).delivery_address
+        const payStatus = (order.payment_status ?? 'awaiting_verification') as PaymentStatus
+        const pay = paymentBadge[payStatus] ?? paymentBadge.awaiting_verification
 
         return (
           <div key={order.id} className={`bg-neutral-900 rounded-2xl shadow-sm border-l-4 ${borderClass} overflow-hidden`}>
@@ -193,11 +195,9 @@ export default function DashboardClient({ initialOrders }: Props) {
                     Advance (40%): <span className="font-semibold text-white">₹{order.advance_amount ?? 0}</span>
                   </span>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                      paymentBadge[(order.payment_status ?? 'awaiting_verification') as PaymentStatus].cls
-                    }`}
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${pay.cls}`}
                   >
-                    {paymentBadge[(order.payment_status ?? 'awaiting_verification') as PaymentStatus].label}
+                    {pay.label}
                   </span>
                 </div>
                 {order.payment_ref && (
@@ -205,7 +205,7 @@ export default function DashboardClient({ initialOrders }: Props) {
                     UTR: {order.payment_ref}
                   </p>
                 )}
-                {(order.payment_status ?? 'awaiting_verification') === 'awaiting_verification' && (
+                {payStatus === 'awaiting_verification' && (
                   <div className="mt-2 flex gap-2">
                     <Button
                       className="h-9 flex-1 bg-green-600 hover:bg-green-700 rounded-lg text-xs font-semibold"

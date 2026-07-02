@@ -16,12 +16,10 @@ import {
   QrCode,
   Upload,
   X,
-  ShoppingBag,
-  Package,
 } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
-import { useCart, useHydrated, cartTotal, useMenuDate } from '@/lib/k14-store'
+import { useCart, useHydrated, cartTotal, useMenuDate, useLanguage, t } from '@/lib/k14-store'
 import { money } from '@/lib/format'
 import { formatIso, hijriFromIso } from '@/lib/dates'
 import PaymentQR from '@/components/PaymentQR'
@@ -49,6 +47,7 @@ const UPI_PAYEE = process.env.NEXT_PUBLIC_UPI_PAYEE || 'K14 Tabbruk Kitchen'
 export default function CheckoutPage() {
   const router = useRouter()
   const hydrated = useHydrated()
+  const { lang } = useLanguage()
   const { items, clear } = useCart()
   const subtotal = hydrated ? cartTotal(items) : 0
   // Delivery date the customer chose on the menu page — carried over here.
@@ -59,7 +58,8 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false)
 
   const [fulfillment, setFulfillment] = useState<Fulfillment>('pickup')
-  const [packing, setPacking] = useState<Packing>('none')
+  // Packing option removed from checkout; keep 'none' so totals/order stay valid.
+  const [packing] = useState<Packing>('none')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [note, setNote] = useState('')
@@ -100,11 +100,11 @@ export default function CheckoutPage() {
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
+      toast.error(t('Please select an image file', 'कृपया एक इमेज फ़ाइल चुनें', lang))
       return
     }
     if (file.size > 8 * 1024 * 1024) {
-      toast.error('Screenshot is too large (max 8 MB)')
+      toast.error(t('Screenshot is too large (max 8 MB)', 'स्क्रीनशॉट बहुत बड़ा है (अधिकतम 8 MB)', lang))
       return
     }
     if (proofPreview) URL.revokeObjectURL(proofPreview)
@@ -141,27 +141,27 @@ export default function CheckoutPage() {
   async function placeOrder() {
     if (!user) return
     if (items.length === 0) {
-      toast.error('Your cart is empty')
+      toast.error(t('Your cart is empty', 'आपका कार्ट खाली है', lang))
       return
     }
     if (!date || !time) {
-      toast.error('Please select a date and time')
+      toast.error(t('Please select a date and time', 'कृपया तारीख़ और समय चुनें', lang))
       return
     }
     if (!name.trim()) {
-      toast.error('Please enter your name')
+      toast.error(t('Please enter your name', 'कृपया अपना नाम दर्ज करें', lang))
       return
     }
     if (!phone.trim()) {
-      toast.error('Please enter your phone number')
+      toast.error(t('Please enter your phone number', 'कृपया अपना फ़ोन नंबर दर्ज करें', lang))
       return
     }
     if (fulfillment === 'delivery' && (!address.name || !address.line)) {
-      toast.error('Please complete the delivery address')
+      toast.error(t('Please complete the delivery address', 'कृपया डिलीवरी पता पूरा करें', lang))
       return
     }
     if (!proofFile) {
-      toast.error('Please pay the 40% advance and upload a payment screenshot')
+      toast.error(t('Please pay the 40% advance and upload a payment screenshot', 'कृपया 40% अग्रिम भुगतान करें और भुगतान स्क्रीनशॉट अपलोड करें', lang))
       return
     }
 
@@ -176,7 +176,7 @@ export default function CheckoutPage() {
       .upload(proofPath, proofFile, { cacheControl: '3600', upsert: false })
     if (uploadErr) {
       setSubmitting(false)
-      toast.error(`Could not upload screenshot: ${uploadErr.message}`)
+      toast.error(`${t('Could not upload screenshot', 'स्क्रीनशॉट अपलोड नहीं हो सका', lang)}: ${uploadErr.message}`)
       return
     }
     const payment_proof_url = supabase.storage.from('payment-proofs').getPublicUrl(proofPath).data
@@ -199,9 +199,9 @@ export default function CheckoutPage() {
       return
     }
 
-    // Derive store_id: use it only when all items come from the same store.
-    const storeIds = [...new Set(items.map((ci) => ci.item.store_id).filter(Boolean))]
-    const orderStoreId = storeIds.length === 1 ? storeIds[0] : null
+    // The cart is single-store (mixing stores is blocked on the menu), so the
+    // order's store_id is simply the store of the cart's items.
+    const orderStoreId = items.map((ci) => ci.item.store_id).find(Boolean) ?? null
 
     const altPhoneVal = altPhone.trim() || undefined
     const packingInfo = { packing, packing_label: PACKING_LABEL[packing], packing_fee: packingFee }
@@ -228,7 +228,7 @@ export default function CheckoutPage() {
 
     if (orderErr || !order) {
       setSubmitting(false)
-      toast.error(orderErr?.message ?? 'Could not place order')
+      toast.error(orderErr?.message ?? t('Could not place order', 'ऑर्डर नहीं दिया जा सका', lang))
       return
     }
     setOrderCode(order.order_code ?? '')
@@ -257,25 +257,31 @@ export default function CheckoutPage() {
     return (
       <div className="phone-screen flex min-h-[100dvh] flex-col items-center justify-center bg-[#0e0b08] px-8 text-center text-white">
         <CheckCircle2 className="size-16 text-[#d4af37]" />
-        <h1 className="mt-5 font-serif-display text-2xl font-bold k14-gold-gradient">Khidmah Confirmed</h1>
+        <h1 className="mt-5 font-serif-display text-2xl font-bold k14-gold-gradient">{t('Khidmah Confirmed', 'ख़िदमत पुष्टि', lang)}</h1>
         {orderCode && (
           <p className="mt-3 rounded-lg border border-[#d4af37]/30 bg-[#d4af37]/10 px-3 py-1.5 font-mono text-xs font-bold tracking-wide text-[#d4af37]">
             {orderCode}
           </p>
         )}
         <p className="mt-2 text-sm text-white/60">
-          Your tabarruk order is booked for {date} at {time} ·{' '}
-          {fulfillment === 'pickup' ? 'Store Pickup' : 'Home Delivery'}.
+          {t(
+            `Your tabarruk order is booked for ${date} at ${time} · ${fulfillment === 'pickup' ? 'Store Pickup' : 'Home Delivery'}.`,
+            `आपका तबर्रुक ऑर्डर ${date} को ${time} बजे बुक हो गया · ${fulfillment === 'pickup' ? 'स्टोर पिकअप' : 'होम डिलीवरी'}।`,
+            lang
+          )}
         </p>
         <p className="mt-3 text-xs text-white/40">
-          We&apos;ve received your {money(advance)} advance screenshot. The kitchen will verify it
-          and accept your order shortly.
+          {t(
+            `We've received your ${money(advance)} advance screenshot. The kitchen will verify it and accept your order shortly.`,
+            `हमें आपका ${money(advance)} अग्रिम स्क्रीनशॉट मिल गया है। रसोई इसे सत्यापित कर शीघ्र ही आपका ऑर्डर स्वीकार करेगी।`,
+            lang
+          )}
         </p>
         <Link
           href="/menu"
           className="mt-8 rounded-xl bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] px-8 py-3 text-sm font-bold text-[#1a1206]"
         >
-          Back to Menu
+          {t('Back to Menu', 'मेन्यू पर वापस', lang)}
         </Link>
       </div>
     )
@@ -287,16 +293,16 @@ export default function CheckoutPage() {
         <Link href="/cart" aria-label="Back" className="text-white/70 hover:text-white">
           <ChevronLeft className="size-5" />
         </Link>
-        <h1 className="font-serif-display text-xl font-bold text-white">Checkout</h1>
+        <h1 className="font-serif-display text-xl font-bold text-white">{t('Checkout', 'चेकआउट', lang)}</h1>
       </header>
 
       <div className="space-y-7 px-5 pt-5">
         {/* Order summary */}
         <section>
-          <h2 className="mb-3 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">ORDER SUMMARY</h2>
+          <h2 className="mb-3 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">{t('ORDER SUMMARY', 'ऑर्डर सारांश', lang)}</h2>
           <div className="rounded-2xl border border-white/10 bg-[#17120c] p-4">
             {items.length === 0 ? (
-              <p className="text-sm text-white/50">Your cart is empty.</p>
+              <p className="text-sm text-white/50">{t('Your cart is empty.', 'आपका कार्ट खाली है।', lang)}</p>
             ) : (
               items.map(({ item, qty }) => (
                 <div key={item.id} className="flex justify-between py-1.5 text-sm">
@@ -312,10 +318,10 @@ export default function CheckoutPage() {
 
         {/* Date & time */}
         <section>
-          <h2 className="mb-3 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">DATE &amp; TIME</h2>
+          <h2 className="mb-3 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">{t('DATE & TIME', 'तारीख़ और समय', lang)}</h2>
           <div className="rounded-2xl border border-white/10 bg-[#17120c] p-4">
             <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-white/60">
-              <Calendar className="size-4" /> Date
+              <Calendar className="size-4" /> {t('Date', 'तारीख़', lang)}
             </label>
             <input
               type="date"
@@ -333,20 +339,20 @@ export default function CheckoutPage() {
             )}
             {!date && <div className="mb-4" />}
             <label className="mb-2 flex items-center gap-2 text-xs font-semibold text-white/60">
-              <Clock className="size-4" /> Time slot
+              <Clock className="size-4" /> {t('Time slot', 'समय स्लॉट', lang)}
             </label>
             <div className="flex flex-wrap gap-2">
-              {TIME_SLOTS.map((t) => (
+              {TIME_SLOTS.map((slot) => (
                 <button
-                  key={t}
-                  onClick={() => setTime(t)}
+                  key={slot}
+                  onClick={() => setTime(slot)}
                   className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
-                    time === t
+                    time === slot
                       ? 'bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-[#1a1206]'
                       : 'border border-white/15 text-white/60 hover:text-white'
                   }`}
                 >
-                  {t}
+                  {slot}
                 </button>
               ))}
             </div>
@@ -356,8 +362,8 @@ export default function CheckoutPage() {
         {/* Order note (optional) */}
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">
-            ORDER NOTE
-            <span className="text-[9px] text-white/30">OPTIONAL</span>
+            {t('ORDER NOTE', 'ऑर्डर नोट', lang)}
+            <span className="text-[9px] text-white/30">{t('OPTIONAL', 'वैकल्पिक', lang)}</span>
           </h2>
           <div className="rounded-2xl border border-white/10 bg-[#17120c] p-4">
             <textarea
@@ -365,7 +371,7 @@ export default function CheckoutPage() {
               onChange={(e) => setNote(e.target.value)}
               rows={3}
               maxLength={500}
-              placeholder="Any special instructions for the kitchen — e.g. less sugar, packaging, landmark, majlis timing…"
+              placeholder={t('Any special instructions for the kitchen — e.g. less sugar, packaging, landmark, majlis timing…', 'रसोई के लिए कोई विशेष निर्देश — जैसे कम चीनी, पैकेजिंग, लैंडमार्क, मजलिस समय…', lang)}
               className="w-full resize-none rounded-lg border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
             />
           </div>
@@ -374,28 +380,28 @@ export default function CheckoutPage() {
         {/* Contact details */}
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">
-            CONTACT DETAILS
-            <span className="text-[9px] text-[#b6555b]">REQUIRED</span>
+            {t('CONTACT DETAILS', 'संपर्क विवरण', lang)}
+            <span className="text-[9px] text-[#b6555b]">{t('REQUIRED', 'आवश्यक', lang)}</span>
           </h2>
           <div className="rounded-2xl border border-white/10 bg-[#17120c] p-4">
-            <label className="mb-1.5 block text-xs font-semibold text-white/60">Name</label>
+            <label className="mb-1.5 block text-xs font-semibold text-white/60">{t('Name', 'नाम', lang)}</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
+              placeholder={t('Enter your name', 'अपना नाम दर्ज करें', lang)}
               autoComplete="name"
               className="mb-4 h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
             />
             <label className="mb-1.5 block text-xs font-semibold text-white/60">
-              Alternate phone <span className="text-white/30">(optional)</span>
+              {t('Alternate phone', 'वैकल्पिक फ़ोन', lang)} <span className="text-white/30">{t('(optional)', '(वैकल्पिक)', lang)}</span>
             </label>
             <input
               type="tel"
               inputMode="numeric"
               value={altPhone}
               onChange={(e) => setAltPhone(e.target.value)}
-              placeholder="Another number we can reach you on"
+              placeholder={t('Another number we can reach you on', 'एक और नंबर जिस पर हम संपर्क कर सकें', lang)}
               autoComplete="tel"
               className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
             />
@@ -404,7 +410,7 @@ export default function CheckoutPage() {
 
         {/* Fulfillment */}
         <section>
-          <h2 className="mb-3 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">FULFILLMENT</h2>
+          <h2 className="mb-3 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">{t('FULFILLMENT', 'पूर्ति', lang)}</h2>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setFulfillment('pickup')}
@@ -415,8 +421,8 @@ export default function CheckoutPage() {
               }`}
             >
               <Store className={`size-6 ${fulfillment === 'pickup' ? 'text-[#d4af37]' : 'text-white/60'}`} />
-              <span className="text-sm font-bold">Store Pickup</span>
-              <span className="text-[10px] text-white/40">Free · No address</span>
+              <span className="text-sm font-bold">{t('Store Pickup', 'स्टोर पिकअप', lang)}</span>
+              <span className="text-[10px] text-white/40">{t('Free · No address', 'निःशुल्क · कोई पता नहीं', lang)}</span>
             </button>
             <button
               onClick={() => setFulfillment('delivery')}
@@ -427,8 +433,8 @@ export default function CheckoutPage() {
               }`}
             >
               <Truck className={`size-6 ${fulfillment === 'delivery' ? 'text-[#d4af37]' : 'text-white/60'}`} />
-              <span className="text-sm font-bold">Home Delivery</span>
-              <span className="text-[10px] text-white/40">{money(DELIVERY_FEE)} · To your door</span>
+              <span className="text-sm font-bold">{t('Home Delivery', 'होम डिलीवरी', lang)}</span>
+              <span className="text-[10px] text-white/40">{money(DELIVERY_FEE)} · {t('To your door', 'आपके द्वार तक', lang)}</span>
             </button>
           </div>
 
@@ -437,27 +443,27 @@ export default function CheckoutPage() {
             <div className="mt-3 flex items-start gap-2 rounded-2xl border border-white/10 bg-[#17120c] p-4 text-sm text-white/60">
               <MapPin className="mt-0.5 size-4 shrink-0 text-[#d4af37]" />
               <div>
-                <p className="font-semibold text-white/80">Pickup location</p>
+                <p className="font-semibold text-white/80">{t('Pickup location', 'पिकअप स्थान', lang)}</p>
                 <p>{STORE_ADDRESS}</p>
               </div>
             </div>
           ) : (
             <div className="mt-3 space-y-3 rounded-2xl border border-white/10 bg-[#17120c] p-4">
-              <p className="text-xs font-bold tracking-[0.15em] text-[#d4af37]/80">DELIVERY ADDRESS</p>
+              <p className="text-xs font-bold tracking-[0.15em] text-[#d4af37]/80">{t('DELIVERY ADDRESS', 'डिलीवरी पता', lang)}</p>
               <input
-                placeholder="Full name"
+                placeholder={t('Full name', 'पूरा नाम', lang)}
                 value={address.name}
                 onChange={(e) => setAddress({ ...address, name: e.target.value })}
                 className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
               />
               <input
-                placeholder="Street address"
+                placeholder={t('Street address', 'गली का पता', lang)}
                 value={address.line}
                 onChange={(e) => setAddress({ ...address, line: e.target.value })}
                 className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
               />
               <input
-                placeholder="Area / landmark (optional)"
+                placeholder={t('Area / landmark (optional)', 'क्षेत्र / लैंडमार्क (वैकल्पिक)', lang)}
                 value={address.area}
                 onChange={(e) => setAddress({ ...address, area: e.target.value })}
                 className="h-11 w-full rounded-lg border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/50"
@@ -466,68 +472,28 @@ export default function CheckoutPage() {
           )}
         </section>
 
-        {/* Packing */}
-        <section>
-          <h2 className="mb-3 flex items-center gap-2 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">
-            PACKING
-            <span className="text-[9px] text-white/30">OPTIONAL</span>
-          </h2>
-          <div className="grid grid-cols-3 gap-3">
-            <button
-              onClick={() => setPacking('none')}
-              className={`flex flex-col items-center gap-2 rounded-2xl border p-4 transition-colors ${
-                packing === 'none' ? 'border-[#d4af37] bg-[#d4af37]/10' : 'border-white/10 bg-[#17120c]'
-              }`}
-            >
-              <X className={`size-6 ${packing === 'none' ? 'text-[#d4af37]' : 'text-white/60'}`} />
-              <span className="text-sm font-bold">None</span>
-              <span className="text-[10px] text-white/40">Free</span>
-            </button>
-            <button
-              onClick={() => setPacking('bag')}
-              className={`flex flex-col items-center gap-2 rounded-2xl border p-4 transition-colors ${
-                packing === 'bag' ? 'border-[#d4af37] bg-[#d4af37]/10' : 'border-white/10 bg-[#17120c]'
-              }`}
-            >
-              <ShoppingBag className={`size-6 ${packing === 'bag' ? 'text-[#d4af37]' : 'text-white/60'}`} />
-              <span className="text-sm font-bold">Bag</span>
-              <span className="text-[10px] text-white/40">+{money(BAG_FEE)}</span>
-            </button>
-            <button
-              onClick={() => setPacking('box')}
-              className={`flex flex-col items-center gap-2 rounded-2xl border p-4 transition-colors ${
-                packing === 'box' ? 'border-[#d4af37] bg-[#d4af37]/10' : 'border-white/10 bg-[#17120c]'
-              }`}
-            >
-              <Package className={`size-6 ${packing === 'box' ? 'text-[#d4af37]' : 'text-white/60'}`} />
-              <span className="text-sm font-bold">Box</span>
-              <span className="text-[10px] text-white/40">+{money(BOX_FEE)}</span>
-            </button>
-          </div>
-        </section>
-
         {/* Totals */}
         <section className="rounded-2xl border border-white/10 bg-[#17120c] p-4 text-sm">
           <div className="flex justify-between text-white/60">
-            <span>Subtotal</span>
+            <span>{t('Subtotal', 'उप-योग', lang)}</span>
             <span>{money(subtotal)}</span>
           </div>
           <div className="mt-2 flex justify-between text-white/60">
-            <span>Service fee</span>
+            <span>{t('Service fee', 'सेवा शुल्क', lang)}</span>
             <span>{money(SERVICE_FEE)}</span>
           </div>
           <div className="mt-2 flex justify-between text-white/60">
-            <span>{fulfillment === 'delivery' ? 'Delivery fee' : 'Pickup'}</span>
-            <span>{deliveryFee ? money(deliveryFee) : 'Free'}</span>
+            <span>{fulfillment === 'delivery' ? t('Delivery fee', 'डिलीवरी शुल्क', lang) : t('Pickup', 'पिकअप', lang)}</span>
+            <span>{deliveryFee ? money(deliveryFee) : t('Free', 'निःशुल्क', lang)}</span>
           </div>
           {packing !== 'none' && (
             <div className="mt-2 flex justify-between text-white/60">
-              <span>Packing ({PACKING_LABEL[packing]})</span>
+              <span>{t('Packing', 'पैकिंग', lang)} ({PACKING_LABEL[packing]})</span>
               <span>{money(packingFee)}</span>
             </div>
           )}
           <div className="mt-3 flex justify-between border-t border-white/10 pt-3 text-base font-bold">
-            <span>Total</span>
+            <span>{t('Total', 'कुल', lang)}</span>
             <span className="text-[#d4af37]">{money(total)}</span>
           </div>
         </section>
@@ -535,27 +501,32 @@ export default function CheckoutPage() {
         {/* 40% advance payment */}
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-[11px] font-bold tracking-[0.25em] text-[#d4af37]">
-            <QrCode className="size-3.5" /> ADVANCE PAYMENT (40%)
-            <span className="text-[9px] text-[#b6555b]">REQUIRED</span>
+            <QrCode className="size-3.5" /> {t('ADVANCE PAYMENT (40%)', 'अग्रिम भुगतान (40%)', lang)}
+            <span className="text-[9px] text-[#b6555b]">{t('REQUIRED', 'आवश्यक', lang)}</span>
           </h2>
           <div className="rounded-2xl border border-white/10 bg-[#17120c] p-4">
             <p className="text-sm text-white/60">
-              Pay <span className="font-bold text-[#d4af37]">{money(advance)}</span> now to confirm
-              your order. The remaining{' '}
-              <span className="font-semibold text-white/80">{money(balance)}</span> is collected on{' '}
-              {fulfillment === 'pickup' ? 'pickup' : 'delivery'}.
+              {t(
+                `Pay ${money(advance)} now to confirm your order. The remaining ${money(balance)} is collected on ${fulfillment === 'pickup' ? 'pickup' : 'delivery'}.`,
+                `अपना ऑर्डर पक्का करने के लिए अभी ${money(advance)} भुगतान करें। शेष ${money(balance)} ${fulfillment === 'pickup' ? 'पिकअप' : 'डिलीवरी'} पर लिया जाएगा।`,
+                lang
+              )}
             </p>
 
             <div className="mt-4 flex flex-col items-center gap-3">
               <PaymentQR value={upiUri} size={196} />
               <p className="text-center text-[11px] text-white/40">
-                Scan with any UPI app (GPay · PhonePe · Paytm) to pay {money(advance)} to{' '}
+                {t(
+                  `Scan with any UPI app (GPay · PhonePe · Paytm) to pay ${money(advance)} to`,
+                  `${money(advance)} भुगतान करने के लिए किसी भी UPI ऐप (GPay · PhonePe · Paytm) से स्कैन करें`,
+                  lang
+                )}{' '}
                 <span className="text-white/60">{UPI_VPA}</span>
               </p>
             </div>
 
             <label className="mt-5 mb-1.5 block text-xs font-semibold text-white/60">
-              Payment screenshot
+              {t('Payment screenshot', 'भुगतान स्क्रीनशॉट', lang)}
             </label>
             {proofPreview ? (
               <div className="relative overflow-hidden rounded-lg border border-white/10 bg-black/40">
@@ -573,21 +544,24 @@ export default function CheckoutPage() {
             ) : (
               <label className="flex h-28 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 bg-black/40 text-white/50 hover:border-[#d4af37]/50">
                 <Upload className="size-5" />
-                <span className="text-xs font-semibold">Tap to upload screenshot</span>
-                <span className="text-[10px] text-white/30">PNG or JPG · max 8 MB</span>
+                <span className="text-xs font-semibold">{t('Tap to upload screenshot', 'स्क्रीनशॉट अपलोड करने के लिए टैप करें', lang)}</span>
+                <span className="text-[10px] text-white/30">{t('PNG or JPG · max 8 MB', 'PNG या JPG · अधिकतम 8 MB', lang)}</span>
                 <input type="file" accept="image/*" onChange={onPickProof} className="hidden" />
               </label>
             )}
             <p className="mt-2 text-[11px] text-white/40">
-              Upload a screenshot of your {money(advance)} payment. The kitchen verifies it before
-              accepting your order.
+              {t(
+                `Upload a screenshot of your ${money(advance)} payment. The kitchen verifies it before accepting your order.`,
+                `अपने ${money(advance)} भुगतान का स्क्रीनशॉट अपलोड करें। रसोई आपका ऑर्डर स्वीकार करने से पहले इसे सत्यापित करती है।`,
+                lang
+              )}
             </p>
           </div>
         </section>
 
         {fulfillment === 'delivery' && (
           <p className="px-1 text-center text-[11px] text-white/40">
-            Note: Home delivery charges will be added afterwards.
+            {t('Note: Home delivery charges will be added afterwards.', 'नोट: होम डिलीवरी शुल्क बाद में जोड़ा जाएगा।', lang)}
           </p>
         )}
       </div>
@@ -602,7 +576,7 @@ export default function CheckoutPage() {
           {submitting ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
-            `Place Order · ${money(advance)} advance`
+            t(`Place Order · ${money(advance)} advance`, `ऑर्डर करें · ${money(advance)} अग्रिम`, lang)
           )}
         </button>
       </div>

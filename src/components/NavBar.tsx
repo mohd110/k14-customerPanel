@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { useCartStore } from '@/store/cart'
+import { useCart, cartCount } from '@/lib/k14-store'
 import { ChevronLeft, Search, ShoppingCart } from 'lucide-react'
 import Link from 'next/link'
 
@@ -14,7 +14,7 @@ interface Props {
 
 export default function NavBar({ role, title, showBack }: Props) {
   const router = useRouter()
-  const itemCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0))
+  const itemCount = useCart((s) => cartCount(s.items))
 
   async function handleLogout() {
     const supabase = createClient()

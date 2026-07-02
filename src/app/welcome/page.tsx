@@ -3,9 +3,11 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useLanguage, t } from '@/lib/k14-store'
 
 export default function WelcomePage() {
   const [mounted, setMounted] = useState(false)
+  const { lang } = useLanguage()
   useEffect(() => { setMounted(true) }, [])
 
   return (
@@ -41,7 +43,7 @@ export default function WelcomePage() {
 
         {/* Tagline */}
         <p className="mt-1 text-base text-neutral-400 italic text-center font-medium">
-          The taste worth gathering for
+          {t('The taste worth gathering for', 'वह स्वाद जिसके लिए सब जुटते हैं', lang)}
         </p>
       </div>
 
@@ -57,7 +59,7 @@ export default function WelcomePage() {
             transition: 'opacity 0.7s ease 0.2s, transform 0.7s ease 0.2s',
           }}
         >
-          Get Started
+          {t('Get Started', 'शुरू करें', lang)}
           <ArrowRight className="size-5" />
         </Link>
       </div>

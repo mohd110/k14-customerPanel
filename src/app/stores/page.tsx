@@ -146,7 +146,7 @@ export default function StoresPage() {
 
                     {/* Info */}
                     <div className="relative min-w-0">
-                      <h2 className="font-serif-display text-[15px] font-bold leading-tight text-gray-900">
+                      <h2 className="text-[15px] font-extrabold leading-tight text-gray-900">
                         {store.name}
                       </h2>
                       <p className="mt-1 line-clamp-2 text-[10.5px] leading-snug text-gray-500">
@@ -199,7 +199,7 @@ export default function StoresPage() {
                   </div>
 
                   <div className="min-w-0">
-                    <h2 className="font-serif-display text-[15px] font-bold leading-tight text-gray-400">{store.name}</h2>
+                    <h2 className="text-[15px] font-extrabold leading-tight text-gray-400">{store.name}</h2>
                     <p className="mt-1 line-clamp-2 text-[10.5px] leading-snug text-gray-400/80">{store.short_desc}</p>
                   </div>
 
