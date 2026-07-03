@@ -36,17 +36,17 @@ function ItemCard({
       <div className={`flex gap-4 ${available ? '' : 'opacity-70'}`}>
         {/* Left: details */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <h3 className="font-serif-display text-lg font-bold capitalize leading-snug text-white">{item.name}</h3>
+          <h3 className="font-serif-display text-lg font-bold capitalize leading-snug text-gray-900">{item.name}</h3>
           <span className="mt-1 font-bold" style={{ color: accent }}>{money(item.price)}</span>
-          <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-white/50">{item.description}</p>
+          <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-gray-500">{item.description}</p>
           {!available && (
-            <span className="mt-2 inline-flex w-fit items-center rounded-md border border-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/40">{t('Out of stock on this date', 'इस तारीख़ पर स्टॉक ख़त्म', lang)}</span>
+            <span className="mt-2 inline-flex w-fit items-center rounded-md border border-gray-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-400">{t('Out of stock on this date', 'इस तारीख़ पर स्टॉक ख़त्म', lang)}</span>
           )}
         </div>
 
         {/* Right: static image + Add button that opens the popup */}
         <div className="relative w-32 shrink-0 self-start">
-          <div className="overflow-hidden rounded-2xl border border-white/10">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
             <div className="relative aspect-square w-full overflow-hidden bg-white">
               <img src={heroImg} alt={item.name} className={`h-full w-full object-contain transition-all ${available ? '' : 'grayscale'}`} />
               {!available && (
@@ -57,7 +57,7 @@ function ItemCard({
             </div>
           </div>
           {available && (
-            <button onClick={() => setOpen(true)} aria-label={`Add ${item.name}`} style={{ borderColor: `${accent}66`, color: accent }} className="absolute -bottom-3 left-1/2 flex h-9 min-w-[86px] -translate-x-1/2 items-center justify-center gap-1 rounded-lg border bg-white text-xs font-extrabold uppercase tracking-wide shadow-lg shadow-black/40 transition-transform active:scale-[0.97]">
+            <button onClick={() => setOpen(true)} aria-label={`Add ${item.name}`} style={{ borderColor: `${accent}66`, color: accent }} className="absolute -bottom-3 left-1/2 flex h-9 min-w-[86px] -translate-x-1/2 items-center justify-center gap-1 rounded-lg border bg-white text-xs font-extrabold uppercase tracking-wide shadow-lg shadow-gray-300/70 transition-transform active:scale-[0.97]">
               <Plus className="size-3.5" /> {t('Add', 'जोड़ें', lang)}
             </button>
           )}
@@ -80,18 +80,18 @@ function ItemSheet({ item, gallery, accent, onConfirm, onClose }: { item: Produc
     onConfirm(qty)
   }
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="phone-screen w-full rounded-t-3xl border-t border-[#d4af37]/20 bg-[#17120c] p-5 pb-8 animate-in slide-in-from-bottom duration-200" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="phone-screen w-full rounded-t-3xl border-t border-gray-100 bg-white p-5 pb-8 animate-in slide-in-from-bottom duration-200" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h3 className="font-serif-display text-lg font-bold capitalize text-white">{item.name}</h3>
+            <h3 className="font-serif-display text-lg font-bold capitalize text-gray-900">{item.name}</h3>
             <span className="font-bold" style={{ color: accent }}>{money(item.price)}</span>
           </div>
-          <button onClick={onClose} aria-label="Close" className="text-white/40 hover:text-white"><X className="size-5" /></button>
+          <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-700"><X className="size-5" /></button>
         </div>
 
         {/* Both packaging images */}
-        <div className="overflow-hidden rounded-2xl border border-white/10">
+        <div className="overflow-hidden rounded-2xl border border-gray-100">
           {gallery ? (
             <ProductImageSlider images={gallery} captions={GALLERY_CAPTIONS} alt={item.name} />
           ) : (
@@ -101,12 +101,12 @@ function ItemSheet({ item, gallery, accent, onConfirm, onClose }: { item: Produc
           )}
         </div>
 
-        {item.description && <p className="mt-3 text-xs leading-relaxed text-white/50">{item.description}</p>}
+        {item.description && <p className="mt-3 text-xs leading-relaxed text-gray-500">{item.description}</p>}
 
         {/* Quantity selector — same plain number-field format */}
         <div className="mt-4 flex items-center gap-3">
           <label className="text-[10px] font-bold tracking-[0.15em]" style={{ color: accent }}>{t('QTY', 'मात्रा', lang)}</label>
-          <input type="text" inputMode="numeric" pattern="[0-9]*" aria-label={`Quantity for ${item.name}`} autoFocus value={qtyText} placeholder="--" onChange={(e) => setQtyText(e.target.value.replace(/[^0-9]/g, ''))} onBlur={() => setQtyText(qty > 0 ? String(qty) : '')} className="h-11 w-16 rounded-lg border border-white/15 bg-black/30 text-center text-base font-bold text-white placeholder:text-white/30 outline-none focus:border-white/40 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
+          <input type="text" inputMode="numeric" pattern="[0-9]*" aria-label={`Quantity for ${item.name}`} autoFocus value={qtyText} placeholder="--" onChange={(e) => setQtyText(e.target.value.replace(/[^0-9]/g, ''))} onBlur={() => setQtyText(qty > 0 ? String(qty) : '')} className="h-11 w-16 rounded-lg border border-gray-200 bg-gray-50 text-center text-base font-bold text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
         </div>
 
         <button onClick={confirm} style={{ backgroundColor: accent }} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold text-white shadow-lg transition-transform active:scale-[0.98]">
@@ -120,23 +120,23 @@ function ItemSheet({ item, gallery, accent, onConfirm, onClose }: { item: Produc
 function DateSheet({ options, selected, onSelect, onClose, accent }: { options: DateOption[]; selected: string | null; onSelect: (iso: string) => void; onClose: () => void; accent: string }) {
   const { lang } = useLanguage()
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="phone-screen w-full rounded-t-3xl border-t border-[#d4af37]/20 bg-[#17120c] p-6 pb-8 animate-in slide-in-from-bottom duration-200" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="phone-screen w-full rounded-t-3xl border-t border-gray-100 bg-white p-6 pb-8 animate-in slide-in-from-bottom duration-200" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-start justify-between gap-3">
-          <div><h3 className="font-serif-display text-lg font-bold text-white">{t('Select a date', 'तारीख़ चुनें', lang)}</h3><p className="mt-0.5 text-xs text-white/50">{t("Choose a delivery date to see that day's menu.", 'उस दिन का मेन्यू देखने के लिए डिलीवरी तारीख़ चुनें।', lang)}</p></div>
-          <button onClick={onClose} aria-label="Close" className="text-white/40 hover:text-white"><X className="size-5" /></button>
+          <div><h3 className="font-serif-display text-lg font-bold text-gray-900">{t('Select a date', 'तारीख़ चुनें', lang)}</h3><p className="mt-0.5 text-xs text-gray-500">{t("Choose a delivery date to see that day's menu.", 'उस दिन का मेन्यू देखने के लिए डिलीवरी तारीख़ चुनें।', lang)}</p></div>
+          <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-700"><X className="size-5" /></button>
         </div>
         <div className="max-h-[55vh] space-y-2 overflow-y-auto">
           {options.map((d) => {
             const active = d.iso === selected
             return (
-              <button key={d.iso} onClick={() => onSelect(d.iso)} style={active ? { borderColor: accent, backgroundColor: `${accent}1a` } : undefined} className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${active ? '' : 'border-white/10 bg-white/[0.02] hover:bg-white/[0.05]'}`}>
+              <button key={d.iso} onClick={() => onSelect(d.iso)} style={active ? { borderColor: accent, backgroundColor: `${accent}1a` } : undefined} className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${active ? '' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-black/30">
+                  <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-gray-100">
                     <span className="text-[9px] font-bold tracking-wider" style={{ color: accent }}>{d.month.toUpperCase()}</span>
-                    <span className="text-base font-bold leading-none text-white">{d.day}</span>
+                    <span className="text-base font-bold leading-none text-gray-900">{d.day}</span>
                   </div>
-                  <div><p className="text-sm font-semibold text-white">{d.weekday}</p><p className="text-xs text-white/45">{d.full}</p>{hijriFromIso(d.iso) && <p className="text-[11px] font-semibold text-[#e23744]">{hijriFromIso(d.iso)}</p>}</div>
+                  <div><p className="text-sm font-semibold text-gray-900">{d.weekday}</p><p className="text-xs text-gray-500">{d.full}</p>{hijriFromIso(d.iso) && <p className="text-[11px] font-semibold text-[#e23744]">{hijriFromIso(d.iso)}</p>}</div>
                 </div>
                 {active && <Check className="size-5" style={{ color: accent }} />}
               </button>
@@ -150,7 +150,7 @@ function DateSheet({ options, selected, onSelect, onClose, accent }: { options: 
 
 export default function StoreMenuPage({ params }: { params: Promise<{ slug: string }> }) {
   return (
-    <Suspense fallback={<div className="phone-screen min-h-[100dvh] bg-[#0e0b08]" />}>
+    <Suspense fallback={<div className="phone-screen min-h-[100dvh] bg-[#FAF6F0]" />}>
       <StoreMenuInner params={params} />
     </Suspense>
   )
@@ -241,24 +241,24 @@ function StoreMenuInner({ params }: { params: Promise<{ slug: string }> }) {
   }
 
   if (!store) {
-    return <div className="phone-screen min-h-[100dvh] flex items-center justify-center bg-[#0e0b08]"><Loader2 className="size-7 animate-spin text-emerald-400" /></div>
+    return <div className="phone-screen min-h-[100dvh] flex items-center justify-center bg-[#FAF6F0]"><Loader2 className="size-7 animate-spin text-[#0e3d2a]" /></div>
   }
 
   // Store's onboarding brand colour drives the menu accents; fall back to gold.
   const accent = store.theme_color && store.theme_color !== '#000000' ? store.theme_color : '#d4af37'
 
   return (
-    <div className="phone-screen min-h-[100dvh] bg-[#0e0b08] pb-24 text-white">
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-white/10 bg-[#0e0b08]/95 px-5 py-3.5 backdrop-blur">
+    <div className="phone-screen min-h-[100dvh] bg-[#FAF6F0] pb-24 text-gray-900">
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-gray-200/70 bg-[#FAF6F0]/90 px-5 py-3.5 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <Link href="/stores" className="text-white/60 hover:text-white"><ArrowLeft className="size-5" /></Link>
+          <Link href="/stores" className="text-gray-500 hover:text-gray-800"><ArrowLeft className="size-5" /></Link>
           <div>
             <p className="text-xs font-bold" style={{ color: accent }}>{store.name}</p>
-            <p className="text-[10px] text-white/40 capitalize">{store.short_desc}</p>
+            <p className="text-[10px] text-gray-500 capitalize">{store.short_desc}</p>
           </div>
         </div>
-        <div className="flex items-center gap-4 text-white/70">
-          <button aria-label="Search"><Search className="size-5" /></button>
+        <div className="flex items-center gap-4 text-gray-500">
+          <button onClick={() => router.push('/search')} aria-label="Search"><Search className="size-5" /></button>
           <Link href="/cart" aria-label="Cart" className="relative">
             <ShoppingBag className="size-5" />
             {count > 0 && <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold text-white" style={{ backgroundColor: accent }}>{count}</span>}
@@ -267,35 +267,35 @@ function StoreMenuInner({ params }: { params: Promise<{ slug: string }> }) {
       </header>
 
       <section className="px-5 pt-6">
-        <h1 className="font-serif-display text-3xl font-bold leading-tight text-white">{store.name}</h1>
-        <p className="mt-1 text-sm capitalize text-white/50">{store.description}</p>
+        <h1 className="font-serif-display text-3xl font-bold leading-tight text-gray-900">{store.name}</h1>
+        <p className="mt-1 text-sm capitalize text-gray-500">{store.description}</p>
       </section>
 
       <main className="mt-6 px-5">
         {!selectedDate ? (
           <button onClick={() => setDateOpen(true)} style={{ borderColor: `${accent}66`, backgroundColor: `${accent}10` }} className="flex w-full flex-col items-center gap-4 rounded-2xl border border-dashed px-6 py-12 text-center">
             <CalendarDays className="size-10" style={{ color: accent }} />
-            <div><p className="font-serif-display text-lg font-bold text-white">{t('Please select a date', 'कृपया एक तारीख़ चुनें', lang)}</p><p className="mt-1 text-xs text-white/50">{t("Pick a date to see what's available.", 'उपलब्ध वस्तुएँ देखने के लिए तारीख़ चुनें।', lang)}</p></div>
+            <div><p className="font-serif-display text-lg font-bold text-gray-900">{t('Please select a date', 'कृपया एक तारीख़ चुनें', lang)}</p><p className="mt-1 text-xs text-gray-500">{t("Pick a date to see what's available.", 'उपलब्ध वस्तुएँ देखने के लिए तारीख़ चुनें।', lang)}</p></div>
             <span className="mt-1 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-white" style={{ backgroundColor: accent }}><CalendarDays className="size-4" /> {t('Select date', 'तारीख़ चुनें', lang)}</span>
           </button>
         ) : loading ? (
           <div className="flex justify-center py-20" style={{ color: accent }}><Loader2 className="size-7 animate-spin" /></div>
         ) : products.length === 0 ? (
-          <div className="py-16 text-center"><p className="text-sm text-white/60">{t(`No items available for ${formatIso(selectedDate)}.`, `${formatIso(selectedDate)} के लिए कोई वस्तु उपलब्ध नहीं।`, lang)}</p><button onClick={() => setDateOpen(true)} className="mt-3 text-xs font-bold underline underline-offset-4" style={{ color: accent }}>{t('Try another date', 'दूसरी तारीख़ आज़माएँ', lang)}</button></div>
+          <div className="py-16 text-center"><p className="text-sm text-gray-500">{t(`No items available for ${formatIso(selectedDate)}.`, `${formatIso(selectedDate)} के लिए कोई वस्तु उपलब्ध नहीं।`, lang)}</p><button onClick={() => setDateOpen(true)} className="mt-3 text-xs font-bold underline underline-offset-4" style={{ color: accent }}>{t('Try another date', 'दूसरी तारीख़ आज़माएँ', lang)}</button></div>
         ) : (
           <section>
             <div className="mb-4 flex items-center justify-between">
-              <div><h2 className="font-serif-display text-xl font-bold text-white">{t('Menu', 'मेन्यू', lang)}</h2><p className="text-xs text-white/45">{t(`for ${formatIso(selectedDate)}`, `${formatIso(selectedDate)} के लिए`, lang)}</p></div>
+              <div><h2 className="font-serif-display text-xl font-bold text-gray-900">{t('Menu', 'मेन्यू', lang)}</h2><p className="text-xs text-gray-500">{t(`for ${formatIso(selectedDate)}`, `${formatIso(selectedDate)} के लिए`, lang)}</p></div>
               <span className="rounded-md border px-2 py-0.5 text-[9px] font-bold tracking-[0.15em]" style={{ borderColor: `${accent}4d`, color: accent }}>{products.filter((p) => isAvailable(p)).length} {t('AVAILABLE', 'उपलब्ध', lang)}</span>
             </div>
-            <div className="divide-y divide-white/10">{products.map((item) => <div key={item.id} id={`product-${item.id}`} style={flashId === item.id ? { backgroundColor: `${accent}1a`, boxShadow: `inset 0 0 0 1px ${accent}66` } : undefined} className="scroll-mt-24 rounded-2xl px-2 py-6 transition-colors duration-700"><ItemCard item={item} onAdd={confirmAdd} available={isAvailable(item)} accent={accent} /></div>)}</div>
+            <div className="divide-y divide-gray-200">{products.map((item) => <div key={item.id} id={`product-${item.id}`} style={flashId === item.id ? { backgroundColor: `${accent}1a`, boxShadow: `inset 0 0 0 1px ${accent}66` } : undefined} className="scroll-mt-24 rounded-2xl px-2 py-6 transition-colors duration-700"><ItemCard item={item} onAdd={confirmAdd} available={isAvailable(item)} accent={accent} /></div>)}</div>
           </section>
         )}
       </main>
 
-      <footer className="mt-10 border-t border-white/10 px-6 py-8 text-center">
-        <p className="text-xs text-white/30 font-medium">Book My Tabarruk</p>
-        <p className="mt-2 text-[10px] text-white/20 capitalize">{store.name} &middot; {store.short_desc}</p>
+      <footer className="mt-10 border-t border-gray-200 px-6 py-8 text-center">
+        <p className="text-xs text-gray-400 font-medium">Book My Tabarruk</p>
+        <p className="mt-2 text-[10px] text-gray-400 capitalize">{store.name} &middot; {store.short_desc}</p>
       </footer>
 
       <BrandFooter className="pb-24" />
