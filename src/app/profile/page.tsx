@@ -118,9 +118,9 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] phone-screen flex flex-col items-center justify-center bg-[#030504]">
+      <div className="min-h-[100dvh] phone-screen flex flex-col items-center justify-center bg-[#FAF6F0]">
         <div className="w-10 h-10 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs text-neutral-400 mt-3 font-semibold">{t('Loading profile...', 'प्रोफ़ाइल लोड हो रही है...', lang)}</p>
+        <p className="text-xs text-gray-500 mt-3 font-semibold">{t('Loading profile...', 'प्रोफ़ाइल लोड हो रही है...', lang)}</p>
       </div>
     )
   }
@@ -131,119 +131,106 @@ export default function ProfilePage() {
   const initial = fullName ? fullName.charAt(0).toUpperCase() : ''
 
   return (
-    <div className="min-h-[100dvh] phone-screen flex flex-col bg-[#030504] text-white pb-safe relative">
-      {/* Header */}
-      <header className="bg-neutral-900/90 backdrop-blur sticky top-0 z-40 px-4 h-14 flex items-center justify-between border-b border-white/10">
-        <div className="flex items-center gap-2 text-[#d4af37]">
-          <img src="/new-logo.jpeg" alt="BMT" className="w-6 h-6 rounded-full object-cover shadow-sm" />
-          <span className="font-extrabold text-sm text-neutral-100">BookMyTabarruk</span>
+    <div className="min-h-[100dvh] phone-screen flex flex-col bg-[#FAF6F0] text-gray-900 pb-safe relative">
+      {/* Header — matches the app's cream/green brand theme */}
+      <header className="bg-[#FAF6F0]/90 backdrop-blur-md sticky top-0 z-40 px-5 h-14 flex items-center justify-between border-b border-gray-200/70">
+        <div className="flex items-center gap-2.5">
+          <img src="/new-logo.jpeg" alt="BMT" className="w-8 h-8 rounded-full object-cover ring-1 ring-[#d4af37]/50" />
+          <span className="font-serif-display font-bold text-sm text-[#0e3d2a]">Book<span className="text-[#d4af37]">My</span>Tabarruk</span>
         </div>
-        <button className="p-1 cursor-pointer">
-          <Search className="size-5 text-neutral-200" />
+        <button onClick={() => router.push('/search')} aria-label="Search" className="p-1 cursor-pointer">
+          <Search className="size-5 text-[#0e3d2a]" />
         </button>
       </header>
 
       {/* Scrollable Content */}
       <div className="flex-grow overflow-y-auto pb-24">
 
-        {/* Profile Card Info */}
-        <div className="flex flex-col items-center pt-6 pb-5">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-emerald-950/40 flex items-center justify-center shadow-md border-2 border-[#d4af37]/40 select-none">
-              {initial ? (
-                <span className="text-4xl font-extrabold text-[#d4af37]">{initial}</span>
-              ) : (
-                <UserIcon className="size-10 text-[#d4af37]/60" />
-              )}
-            </div>
-            {/* Edit pencil badge */}
-            <button
-              onClick={() => setIsEditing(true)}
-              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#d4af37] text-black flex items-center justify-center shadow-md cursor-pointer border-2 border-[#030504] hover:bg-[#c79a2b] transition-colors"
-            >
-              <svg className="size-3.5 fill-black" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7.127 22.564l-5.127 1.436 1.436-5.127 12.192-12.192 3.691 3.691-12.192 12.192zm14.288-14.288l-2.485-2.485 1.586-1.586 2.485 2.485-1.586 1.586z"/>
-              </svg>
-            </button>
-          </div>
-
-          {/* Name */}
-          {fullName ? (
-            <h2 className="text-lg font-extrabold text-white mt-4 leading-tight">{fullName}</h2>
-          ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="mt-4 text-sm font-bold text-[#d4af37] hover:underline"
-            >
-              + {t('Add your name', 'अपना नाम जोड़ें', lang)}
-            </button>
-          )}
-
-          {/* Email */}
-          {email ? (
-            <p className="text-xs text-neutral-400 font-medium mt-1">{email}</p>
-          ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="text-xs text-neutral-500 font-medium mt-1 hover:text-neutral-300"
-            >
-              + {t('Add your email', 'अपना ईमेल जोड़ें', lang)}
-            </button>
-          )}
-
-          {/* Phone */}
-          {phone ? (
-            <div className="mt-2.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide text-[#d4af37] bg-emerald-950/40 border border-[#d4af37]/20">
-              {phone}
-            </div>
-          ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="mt-2.5 px-3.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide text-neutral-400 bg-neutral-900 hover:text-neutral-200"
-            >
-              + {t('Add your phone', 'अपना फ़ोन जोड़ें', lang)}
-            </button>
-          )}
-        </div>
-
-        {/* Orders stat */}
-        <div className="px-4 mb-5">
-          <div className="bg-[#0a1812] rounded-2xl p-4 text-center border border-emerald-900/20 flex flex-col justify-center">
-            <span className="text-2xl font-extrabold text-[#d4af37]">{orderCount}</span>
-            <span className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase mt-0.5">
-              {orderCount === 1 ? t('Order', 'ऑर्डर', lang) : t('Orders', 'ऑर्डर', lang)}
-            </span>
-          </div>
-        </div>
-
-        {/* Options List */}
-        <div className="px-4 space-y-2.5 mb-6">
-          {[
-            { label: t('Saved Addresses', 'सहेजे गए पते', lang), icon: MapPin, color: 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30', href: '/location' },
-            { label: t('Order History', 'ऑर्डर इतिहास', lang), icon: History, color: 'bg-[#2a2410] text-[#d4af37] border-[#3a3420]/30', href: '/orders' },
-            { label: t('Help & Support', 'सहायता', lang), icon: HelpCircle, color: 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30', onClick: () => setActiveModal('support') },
-            { label: t('Logout', 'लॉग आउट', lang), icon: LogOut, color: 'bg-red-950/30 text-red-400 border-red-900/20', onClick: handleLogout },
-          ].map((opt, i) => {
-            const Icon = opt.icon
-            return (
-              <div
-                key={i}
-                onClick={() => {
-                  if (opt.onClick) opt.onClick()
-                  else if (opt.href && opt.href !== '#') router.push(opt.href)
-                }}
-                className="bg-[#0a1812] rounded-2xl p-3 flex items-center justify-between border border-emerald-900/20 cursor-pointer hover:bg-emerald-900/10 active:scale-[0.99] transition-all"
+        {/* ── Green/gold banner with identity ── */}
+        <div className="px-5 pt-5">
+          <div
+            className="relative overflow-hidden rounded-3xl p-5 shadow-lg"
+            style={{ background: 'linear-gradient(180deg, #0e3d2a 0%, #072519 100%)' }}
+          >
+            <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-[#d4af37]/20 blur-2xl" />
+            <div className="relative flex items-center gap-4">
+              <div className="w-16 h-16 shrink-0 rounded-full bg-white/10 border-2 border-[#d4af37]/60 flex items-center justify-center select-none">
+                {initial ? (
+                  <span className="text-2xl font-extrabold text-[#d4af37]">{initial}</span>
+                ) : (
+                  <UserIcon className="size-7 text-[#d4af37]/70" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-extrabold text-white truncate">
+                  {fullName || t('Complete your profile', 'अपनी प्रोफ़ाइल पूरी करें', lang)}
+                </p>
+                <p className="text-xs text-white/60 truncate mt-0.5">
+                  {phone || email || t('Add your name & contact', 'नाम और संपर्क जोड़ें', lang)}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="shrink-0 rounded-full border border-[#d4af37]/40 bg-[#d4af37]/10 px-3.5 py-1.5 text-[11px] font-bold text-[#d4af37] active:scale-95 transition-transform"
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border ${opt.color}`}>
+                {t('Edit', 'संपादित', lang)}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Account section ── */}
+        <div className="px-5 pt-6">
+          <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#0e3d2a]/50">
+            {t('Account', 'खाता', lang)}
+          </p>
+          <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm shadow-gray-200/50 divide-y divide-gray-100">
+            {[
+              { label: t('Edit Profile', 'प्रोफ़ाइल संपादित करें', lang), icon: UserIcon, color: 'bg-[#0e3d2a]/8 text-[#0e3d2a]', onClick: () => setIsEditing(true) },
+              { label: t('Saved Addresses', 'सहेजे गए पते', lang), icon: MapPin, color: 'bg-[#0e3d2a]/8 text-[#0e3d2a]', onClick: () => router.push('/location') },
+              { label: t('Your Orders', 'आपके ऑर्डर', lang), icon: History, color: 'bg-[#d4af37]/12 text-[#b8952a]', badge: orderCount, onClick: () => router.push('/orders') },
+            ].map((row, i) => {
+              const Icon = row.icon
+              return (
+                <button key={i} onClick={row.onClick} className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-gray-50 active:bg-gray-100 transition-colors">
+                  <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${row.color}`}>
                     <Icon className="size-4.5" />
                   </div>
-                  <span className="text-xs font-bold text-neutral-200">{opt.label}</span>
-                </div>
-                <ChevronRight className="size-4 text-neutral-400" />
+                  <span className="flex-1 text-xs font-bold text-gray-800">{row.label}</span>
+                  {row.badge ? (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#d4af37] px-1.5 text-[10px] font-bold text-[#1a1206]">{row.badge}</span>
+                  ) : null}
+                  <ChevronRight className="size-4 text-gray-400" />
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* ── Support section ── */}
+        <div className="px-5 pt-5">
+          <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#0e3d2a]/50">
+            {t('Support', 'सहायता', lang)}
+          </p>
+          <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm shadow-gray-200/50 divide-y divide-gray-100">
+            <button onClick={() => setActiveModal('support')} className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-gray-50 active:bg-gray-100 transition-colors">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#0e3d2a]/8 text-[#0e3d2a]">
+                <HelpCircle className="size-4.5" />
               </div>
-            )
-          })}
+              <span className="flex-1 text-xs font-bold text-gray-800">{t('Help & Support', 'सहायता', lang)}</span>
+              <ChevronRight className="size-4 text-gray-400" />
+            </button>
+            <button onClick={handleLogout} className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-red-50/60 active:bg-red-50 transition-colors">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-500">
+                <LogOut className="size-4.5" />
+              </div>
+              <span className="flex-1 text-xs font-bold text-red-500">{t('Logout', 'लॉग आउट', lang)}</span>
+              <ChevronRight className="size-4 text-gray-400" />
+            </button>
+          </div>
+          <p className="mt-4 text-center text-[10px] text-gray-400 font-semibold tracking-wide">
+            BookMyTabarruk
+          </p>
         </div>
 
         <BrandFooter />
@@ -251,28 +238,28 @@ export default function ProfilePage() {
 
       {/* ── Edit Profile Modal ── */}
       {isEditing && (
-        <div className="absolute inset-0 bg-black/60 z-50 flex items-end justify-center transition-all duration-300">
-          <div className="bg-[#0a1812] w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-emerald-900/30 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="text-base font-extrabold text-white">{t('Edit Profile', 'प्रोफ़ाइल संपादित करें', lang)}</h3>
+        <div className="absolute inset-0 bg-black/50 z-50 flex items-end justify-center transition-all duration-300">
+          <div className="bg-white w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-gray-100 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-extrabold text-gray-900">{t('Edit Profile', 'प्रोफ़ाइल संपादित करें', lang)}</h3>
               <button
                 onClick={() => setIsEditing(false)}
-                className="p-1 rounded-full hover:bg-white/5 transition-colors cursor-pointer"
+                className="p-1 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
               >
-                <X className="size-5 text-neutral-400" />
+                <X className="size-5 text-gray-400" />
               </button>
             </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">{t('Full Name', 'पूरा नाम', lang)}</label>
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{t('Full Name', 'पूरा नाम', lang)}</label>
                 <div className="relative">
-                  <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#d4af37]/60" />
+                  <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#b8952a]" />
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 bg-black/30 border border-emerald-900/30 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#d4af37] text-white placeholder:text-white/20 transition-all"
+                    className="w-full h-11 pl-10 pr-4 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#0e3d2a] focus:ring-2 focus:ring-[#0e3d2a]/10 text-gray-900 placeholder:text-gray-400 transition-all"
                     placeholder={t('Enter your name', 'अपना नाम दर्ज करें', lang)}
                     required
                   />
@@ -280,28 +267,28 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">{t('Email', 'ईमेल', lang)}</label>
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{t('Email', 'ईमेल', lang)}</label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#d4af37]/60" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#b8952a]" />
                   <input
                     type="email"
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 bg-black/30 border border-emerald-900/30 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#d4af37] text-white placeholder:text-white/20 transition-all"
+                    className="w-full h-11 pl-10 pr-4 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#0e3d2a] focus:ring-2 focus:ring-[#0e3d2a]/10 text-gray-900 placeholder:text-gray-400 transition-all"
                     placeholder={t('Enter your email', 'अपना ईमेल दर्ज करें', lang)}
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">{t('Phone Number', 'फ़ोन नंबर', lang)}</label>
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{t('Phone Number', 'फ़ोन नंबर', lang)}</label>
                 <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#d4af37]/60" />
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[#b8952a]" />
                   <input
                     type="tel"
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 bg-black/30 border border-emerald-900/30 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#d4af37] text-white placeholder:text-white/20 transition-all"
+                    className="w-full h-11 pl-10 pr-4 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold focus:outline-none focus:border-[#0e3d2a] focus:ring-2 focus:ring-[#0e3d2a]/10 text-gray-900 placeholder:text-gray-400 transition-all"
                     placeholder={t('Enter phone number', 'फ़ोन नंबर दर्ज करें', lang)}
                   />
                 </div>
@@ -311,11 +298,11 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full h-11 bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-black text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+                  className="w-full h-11 bg-gradient-to-b from-[#1a5c35] to-[#0e3d22] text-white text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50 active:scale-[0.98]"
                 >
                   {saving ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       {t('Saving changes...', 'सहेजा जा रहा है...', lang)}
                     </>
                   ) : (
@@ -330,27 +317,27 @@ export default function ProfilePage() {
 
       {/* ── Help & Support Modal ── */}
       {activeModal === 'support' && (
-        <div className="absolute inset-0 bg-black/60 z-50 flex items-end justify-center transition-all duration-300">
-          <div className="bg-[#0a1812] w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-emerald-900/30 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="text-base font-extrabold text-white">{t('Help & Support', 'सहायता', lang)}</h3>
+        <div className="absolute inset-0 bg-black/50 z-50 flex items-end justify-center transition-all duration-300">
+          <div className="bg-white w-full rounded-t-3xl p-6 pb-8 max-w-[430px] border-t border-gray-100 flex flex-col gap-4 animate-in slide-in-from-bottom duration-250">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-extrabold text-gray-900">{t('Help & Support', 'सहायता', lang)}</h3>
               <button
                 onClick={() => setActiveModal(null)}
-                className="p-1 rounded-full hover:bg-white/5 transition-colors cursor-pointer"
+                className="p-1 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
               >
-                <X className="size-5 text-neutral-400" />
+                <X className="size-5 text-gray-400" />
               </button>
             </div>
 
-            <p className="text-xs text-neutral-400 leading-relaxed font-semibold">
+            <p className="text-xs text-gray-500 leading-relaxed font-semibold">
               {t('Need help with an order? Reach out to the BookMyTabarruk kitchen and the team will assist you.', 'ऑर्डर में मदद चाहिए? BookMyTabarruk रसोई से संपर्क करें, टीम आपकी सहायता करेगी।', lang)}
             </p>
-            <button
-              onClick={() => toast.info(t('Support contact coming soon', 'सहायता संपर्क जल्द आ रहा है', lang))}
-              className="w-full h-11 bg-emerald-950/40 hover:bg-emerald-900/30 text-emerald-400 text-xs font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-colors border border-emerald-900/30"
+            <a
+              href="tel:+919335774525"
+              className="w-full h-12 bg-[#0e3d2a]/8 hover:bg-[#0e3d2a]/12 text-[#0e3d2a] text-sm font-extrabold rounded-2xl flex items-center justify-center gap-2 cursor-pointer transition-colors border border-[#0e3d2a]/20"
             >
-              {t('Contact Support', 'सहायता से संपर्क करें', lang)}
-            </button>
+              <Phone className="size-4" /> +91 93357 74525
+            </a>
           </div>
         </div>
       )}

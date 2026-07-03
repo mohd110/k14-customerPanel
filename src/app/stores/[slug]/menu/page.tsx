@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, use } from 'react'
+import { Suspense, useEffect, useState, use } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Search, ShoppingBag, CalendarDays, ChevronDown, Check, Plus, X, Loader2, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -14,68 +14,110 @@ import { galleryFor, GALLERY_CAPTIONS } from '@/lib/product-gallery'
 import ProductImageSlider from '@/components/ProductImageSlider'
 import { upcomingDatesThrough, endOfAugustIso, formatIso, hijriFromIso, minMenuIso, type DateOption } from '@/lib/dates'
 import BottomNav from '@/components/BottomNav'
+import BrandFooter from '@/components/BrandFooter'
 
 function ItemCard({
   item,
   onAdd,
   available = true,
+  accent,
 }: {
   item: Product
   onAdd: (item: Product, qty: number) => void
   available?: boolean
+  accent: string
 }) {
+  const [open, setOpen] = useState(false)
+  const { lang } = useLanguage()
+  const gallery = galleryFor(item.id)
+  const heroImg = gallery?.[0] || item.photo_url || placeholderImage(item.name)
+  return (
+    <>
+      <div className={`flex gap-4 ${available ? '' : 'opacity-70'}`}>
+        {/* Left: details */}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <h3 className="font-serif-display text-lg font-bold capitalize leading-snug text-white">{item.name}</h3>
+          <span className="mt-1 font-bold" style={{ color: accent }}>{money(item.price)}</span>
+          <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-white/50">{item.description}</p>
+          {!available && (
+            <span className="mt-2 inline-flex w-fit items-center rounded-md border border-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/40">{t('Out of stock on this date', 'इस तारीख़ पर स्टॉक ख़त्म', lang)}</span>
+          )}
+        </div>
+
+        {/* Right: static image + Add button that opens the popup */}
+        <div className="relative w-32 shrink-0 self-start">
+          <div className="overflow-hidden rounded-2xl border border-white/10">
+            <div className="relative aspect-square w-full overflow-hidden bg-white">
+              <img src={heroImg} alt={item.name} className={`h-full w-full object-contain transition-all ${available ? '' : 'grayscale'}`} />
+              {!available && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <span className="rounded-md border border-white/30 bg-black/70 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">{t('Out of stock', 'स्टॉक ख़त्म', lang)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          {available && (
+            <button onClick={() => setOpen(true)} aria-label={`Add ${item.name}`} style={{ borderColor: `${accent}66`, color: accent }} className="absolute -bottom-3 left-1/2 flex h-9 min-w-[86px] -translate-x-1/2 items-center justify-center gap-1 rounded-lg border bg-white text-xs font-extrabold uppercase tracking-wide shadow-lg shadow-black/40 transition-transform active:scale-[0.97]">
+              <Plus className="size-3.5" /> {t('Add', 'जोड़ें', lang)}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {open && available && (
+        <ItemSheet item={item} gallery={gallery} accent={accent} onConfirm={(qty) => { onAdd(item, qty); setOpen(false) }} onClose={() => setOpen(false)} />
+      )}
+    </>
+  )
+}
+
+function ItemSheet({ item, gallery, accent, onConfirm, onClose }: { item: Product; gallery: string[] | null; accent: string; onConfirm: (qty: number) => void; onClose: () => void }) {
   const [qtyText, setQtyText] = useState('')
   const qty = Math.max(0, parseInt(qtyText, 10) || 0)
   const { lang } = useLanguage()
-  const handleAdd = () => {
+  const confirm = () => {
     if (qty < 1) { toast.error(t('Enter a quantity first', 'पहले मात्रा दर्ज करें', lang)); return }
-    onAdd(item, qty)
+    onConfirm(qty)
   }
-  const gallery = galleryFor(item.id)
   return (
-    <div className={`overflow-hidden rounded-2xl border border-white/10 bg-[#17120c] ${available ? '' : 'opacity-80'}`}>
-      {gallery ? (
-        <ProductImageSlider images={gallery} captions={GALLERY_CAPTIONS} alt={item.name} available={available} />
-      ) : (
-        <div className="relative aspect-square w-full overflow-hidden bg-white">
-          <img src={item.photo_url || placeholderImage(item.name)} alt={item.name} className={`h-full w-full object-contain transition-all ${available ? '' : 'grayscale'}`} />
-          {!available && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-              <span className="rounded-md border border-white/30 bg-black/70 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.15em] text-white">{t('Out of stock', 'स्टॉक ख़त्म', lang)}</span>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="phone-screen w-full rounded-t-3xl border-t border-[#d4af37]/20 bg-[#17120c] p-5 pb-8 animate-in slide-in-from-bottom duration-200" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-serif-display text-lg font-bold capitalize text-white">{item.name}</h3>
+            <span className="font-bold" style={{ color: accent }}>{money(item.price)}</span>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="text-white/40 hover:text-white"><X className="size-5" /></button>
+        </div>
+
+        {/* Both packaging images */}
+        <div className="overflow-hidden rounded-2xl border border-white/10">
+          {gallery ? (
+            <ProductImageSlider images={gallery} captions={GALLERY_CAPTIONS} alt={item.name} />
+          ) : (
+            <div className="relative aspect-square w-full overflow-hidden bg-white">
+              <img src={item.photo_url || placeholderImage(item.name)} alt={item.name} className="h-full w-full object-contain" />
             </div>
           )}
         </div>
-      )}
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-serif-display text-lg font-bold text-white">{item.name}</h3>
-          <span className="shrink-0 font-bold text-[#d4af37]">{money(item.price)}</span>
+
+        {item.description && <p className="mt-3 text-xs leading-relaxed text-white/50">{item.description}</p>}
+
+        {/* Quantity selector — same plain number-field format */}
+        <div className="mt-4 flex items-center gap-3">
+          <label className="text-[10px] font-bold tracking-[0.15em]" style={{ color: accent }}>{t('QTY', 'मात्रा', lang)}</label>
+          <input type="text" inputMode="numeric" pattern="[0-9]*" aria-label={`Quantity for ${item.name}`} autoFocus value={qtyText} placeholder="--" onChange={(e) => setQtyText(e.target.value.replace(/[^0-9]/g, ''))} onBlur={() => setQtyText(qty > 0 ? String(qty) : '')} className="h-11 w-16 rounded-lg border border-white/15 bg-black/30 text-center text-base font-bold text-white placeholder:text-white/30 outline-none focus:border-white/40 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
         </div>
-        <p className="mt-1 text-xs leading-relaxed text-white/50">{item.description}</p>
-        {available && (
-          <p className={`mt-2 inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold tracking-[0.08em] ${(item.stock ?? 0) <= 10 ? 'bg-[#e23744]/15 text-[#f08089]' : 'bg-[#d4af37]/12 text-[#d4af37]'}`}>
-            {(item.stock ?? 0) <= 10
-              ? t(`Only ${item.stock} left for this date`, `इस तारीख़ के लिए केवल ${item.stock} बचे`, lang)
-              : t(`${item.stock} left for this date`, `इस तारीख़ के लिए ${item.stock} बचे`, lang)}
-          </p>
-        )}
-        {available ? (
-          <div className="mt-4 flex items-stretch gap-2">
-            <div className="flex shrink-0 flex-col items-center">
-              <label className="mb-1 text-[9px] font-bold tracking-[0.15em] text-[#d4af37]/70">{t('QTY', 'मात्रा', lang)}</label>
-              <input type="text" inputMode="numeric" pattern="[0-9]*" aria-label={`Quantity for ${item.name}`} value={qtyText} placeholder="--" onChange={(e) => setQtyText(e.target.value.replace(/[^0-9]/g, ''))} onBlur={() => setQtyText(qty > 0 ? String(qty) : '')} className="h-11 w-16 rounded-lg border border-white/15 bg-black/30 text-center text-base font-bold text-white placeholder:text-white/30 outline-none focus:border-[#d4af37]/60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
-            </div>
-            <button onClick={handleAdd} className="mt-[18px] flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] text-xs font-bold text-[#1a1206] transition-transform active:scale-[0.98]"><Plus className="size-4" /> {t('Add to Tabarruk', 'तबर्रुक में जोड़ें', lang)}</button>
-          </div>
-        ) : (
-          <button disabled className="mt-4 flex h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-white/15 text-xs font-bold text-white/40">{t('Out of stock on this date', 'इस तारीख़ पर स्टॉक ख़त्म', lang)}</button>
-        )}
+
+        <button onClick={confirm} style={{ backgroundColor: accent }} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold text-white shadow-lg transition-transform active:scale-[0.98]">
+          <Plus className="size-4" /> {t('Add to Tabarruk', 'तबर्रुक में जोड़ें', lang)}
+        </button>
       </div>
     </div>
   )
 }
 
-function DateSheet({ options, selected, onSelect, onClose }: { options: DateOption[]; selected: string | null; onSelect: (iso: string) => void; onClose: () => void }) {
+function DateSheet({ options, selected, onSelect, onClose, accent }: { options: DateOption[]; selected: string | null; onSelect: (iso: string) => void; onClose: () => void; accent: string }) {
   const { lang } = useLanguage()
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
@@ -88,15 +130,15 @@ function DateSheet({ options, selected, onSelect, onClose }: { options: DateOpti
           {options.map((d) => {
             const active = d.iso === selected
             return (
-              <button key={d.iso} onClick={() => onSelect(d.iso)} className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${active ? 'border-[#d4af37] bg-[#d4af37]/10' : 'border-white/10 bg-white/[0.02] hover:bg-white/[0.05]'}`}>
+              <button key={d.iso} onClick={() => onSelect(d.iso)} style={active ? { borderColor: accent, backgroundColor: `${accent}1a` } : undefined} className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${active ? '' : 'border-white/10 bg-white/[0.02] hover:bg-white/[0.05]'}`}>
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-black/30">
-                    <span className="text-[9px] font-bold tracking-wider text-[#d4af37]">{d.month.toUpperCase()}</span>
+                    <span className="text-[9px] font-bold tracking-wider" style={{ color: accent }}>{d.month.toUpperCase()}</span>
                     <span className="text-base font-bold leading-none text-white">{d.day}</span>
                   </div>
                   <div><p className="text-sm font-semibold text-white">{d.weekday}</p><p className="text-xs text-white/45">{d.full}</p>{hijriFromIso(d.iso) && <p className="text-[11px] font-semibold text-[#e23744]">{hijriFromIso(d.iso)}</p>}</div>
                 </div>
-                {active && <Check className="size-5 text-[#d4af37]" />}
+                {active && <Check className="size-5" style={{ color: accent }} />}
               </button>
             )
           })}
@@ -107,13 +149,24 @@ function DateSheet({ options, selected, onSelect, onClose }: { options: DateOpti
 }
 
 export default function StoreMenuPage({ params }: { params: Promise<{ slug: string }> }) {
+  return (
+    <Suspense fallback={<div className="phone-screen min-h-[100dvh] bg-[#0e0b08]" />}>
+      <StoreMenuInner params={params} />
+    </Suspense>
+  )
+}
+
+function StoreMenuInner({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
   const [store, setStore] = useState<Store | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [availableIds, setAvailableIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [dateOpen, setDateOpen] = useState(false)
+  const [flashId, setFlashId] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const focusProductId = searchParams.get('product')
 
   const items = useCart((s) => s.items)
   const add = useCart((s) => s.add)
@@ -153,6 +206,20 @@ export default function StoreMenuPage({ params }: { params: Promise<{ slug: stri
     })
   }, [store, selectedDate])
 
+  // Deep-link from global search: scroll to the product and flash it once loaded.
+  useEffect(() => {
+    if (!focusProductId || loading || products.length === 0) return
+    if (!products.some((p) => p.id === focusProductId)) return
+    const el = document.getElementById(`product-${focusProductId}`)
+    if (!el) return
+    const timer = setTimeout(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setFlashId(focusProductId)
+      setTimeout(() => setFlashId(null), 2000)
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [focusProductId, loading, products])
+
   const isAvailable = (item: Product) => availableIds.has(item.id) && (item.stock ?? 0) > 0
   const confirmAdd = (item: Product, qty: number) => {
     // One cart per store: if the cart already holds another store's items,
@@ -177,60 +244,65 @@ export default function StoreMenuPage({ params }: { params: Promise<{ slug: stri
     return <div className="phone-screen min-h-[100dvh] flex items-center justify-center bg-[#0e0b08]"><Loader2 className="size-7 animate-spin text-emerald-400" /></div>
   }
 
+  // Store's onboarding brand colour drives the menu accents; fall back to gold.
+  const accent = store.theme_color && store.theme_color !== '#000000' ? store.theme_color : '#d4af37'
+
   return (
     <div className="phone-screen min-h-[100dvh] bg-[#0e0b08] pb-24 text-white">
       <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-white/10 bg-[#0e0b08]/95 px-5 py-3.5 backdrop-blur">
         <div className="flex items-center gap-3">
           <Link href="/stores" className="text-white/60 hover:text-white"><ArrowLeft className="size-5" /></Link>
           <div>
-            <p className="text-xs font-bold text-emerald-400">{store.name}</p>
-            <p className="text-[10px] text-white/40">{store.short_desc}</p>
+            <p className="text-xs font-bold" style={{ color: accent }}>{store.name}</p>
+            <p className="text-[10px] text-white/40 capitalize">{store.short_desc}</p>
           </div>
         </div>
         <div className="flex items-center gap-4 text-white/70">
           <button aria-label="Search"><Search className="size-5" /></button>
           <Link href="/cart" aria-label="Cart" className="relative">
             <ShoppingBag className="size-5" />
-            {count > 0 && <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#d4af37] px-1 text-[9px] font-bold text-[#1a1206]">{count}</span>}
+            {count > 0 && <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold text-white" style={{ backgroundColor: accent }}>{count}</span>}
           </Link>
         </div>
       </header>
 
       <section className="px-5 pt-6">
         <h1 className="font-serif-display text-3xl font-bold leading-tight text-white">{store.name}</h1>
-        <p className="mt-1 text-sm text-white/50">{store.description}</p>
+        <p className="mt-1 text-sm capitalize text-white/50">{store.description}</p>
       </section>
 
       <main className="mt-6 px-5">
         {!selectedDate ? (
-          <button onClick={() => setDateOpen(true)} className="flex w-full flex-col items-center gap-4 rounded-2xl border border-dashed border-[#d4af37]/40 bg-[#d4af37]/[0.06] px-6 py-12 text-center">
-            <CalendarDays className="size-10 text-[#d4af37]" />
+          <button onClick={() => setDateOpen(true)} style={{ borderColor: `${accent}66`, backgroundColor: `${accent}10` }} className="flex w-full flex-col items-center gap-4 rounded-2xl border border-dashed px-6 py-12 text-center">
+            <CalendarDays className="size-10" style={{ color: accent }} />
             <div><p className="font-serif-display text-lg font-bold text-white">{t('Please select a date', 'कृपया एक तारीख़ चुनें', lang)}</p><p className="mt-1 text-xs text-white/50">{t("Pick a date to see what's available.", 'उपलब्ध वस्तुएँ देखने के लिए तारीख़ चुनें।', lang)}</p></div>
-            <span className="mt-1 inline-flex items-center gap-2 rounded-lg bg-gradient-to-b from-[#e9c45f] to-[#c79a2b] px-4 py-2 text-xs font-bold text-[#1a1206]"><CalendarDays className="size-4" /> {t('Select date', 'तारीख़ चुनें', lang)}</span>
+            <span className="mt-1 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-bold text-white" style={{ backgroundColor: accent }}><CalendarDays className="size-4" /> {t('Select date', 'तारीख़ चुनें', lang)}</span>
           </button>
         ) : loading ? (
-          <div className="flex justify-center py-20 text-[#d4af37]"><Loader2 className="size-7 animate-spin" /></div>
+          <div className="flex justify-center py-20" style={{ color: accent }}><Loader2 className="size-7 animate-spin" /></div>
         ) : products.length === 0 ? (
-          <div className="py-16 text-center"><p className="text-sm text-white/60">{t(`No items available for ${formatIso(selectedDate)}.`, `${formatIso(selectedDate)} के लिए कोई वस्तु उपलब्ध नहीं।`, lang)}</p><button onClick={() => setDateOpen(true)} className="mt-3 text-xs font-bold text-[#d4af37] underline underline-offset-4">{t('Try another date', 'दूसरी तारीख़ आज़माएँ', lang)}</button></div>
+          <div className="py-16 text-center"><p className="text-sm text-white/60">{t(`No items available for ${formatIso(selectedDate)}.`, `${formatIso(selectedDate)} के लिए कोई वस्तु उपलब्ध नहीं।`, lang)}</p><button onClick={() => setDateOpen(true)} className="mt-3 text-xs font-bold underline underline-offset-4" style={{ color: accent }}>{t('Try another date', 'दूसरी तारीख़ आज़माएँ', lang)}</button></div>
         ) : (
           <section>
             <div className="mb-4 flex items-center justify-between">
               <div><h2 className="font-serif-display text-xl font-bold text-white">{t('Menu', 'मेन्यू', lang)}</h2><p className="text-xs text-white/45">{t(`for ${formatIso(selectedDate)}`, `${formatIso(selectedDate)} के लिए`, lang)}</p></div>
-              <span className="rounded-md border border-[#d4af37]/30 px-2 py-0.5 text-[9px] font-bold tracking-[0.15em] text-[#d4af37]">{products.filter((p) => isAvailable(p)).length} {t('AVAILABLE', 'उपलब्ध', lang)}</span>
+              <span className="rounded-md border px-2 py-0.5 text-[9px] font-bold tracking-[0.15em]" style={{ borderColor: `${accent}4d`, color: accent }}>{products.filter((p) => isAvailable(p)).length} {t('AVAILABLE', 'उपलब्ध', lang)}</span>
             </div>
-            <div className="space-y-5">{products.map((item) => <ItemCard key={item.id} item={item} onAdd={confirmAdd} available={isAvailable(item)} />)}</div>
+            <div className="divide-y divide-white/10">{products.map((item) => <div key={item.id} id={`product-${item.id}`} style={flashId === item.id ? { backgroundColor: `${accent}1a`, boxShadow: `inset 0 0 0 1px ${accent}66` } : undefined} className="scroll-mt-24 rounded-2xl px-2 py-6 transition-colors duration-700"><ItemCard item={item} onAdd={confirmAdd} available={isAvailable(item)} accent={accent} /></div>)}</div>
           </section>
         )}
       </main>
 
       <footer className="mt-10 border-t border-white/10 px-6 py-8 text-center">
         <p className="text-xs text-white/30 font-medium">Book My Tabarruk</p>
-        <p className="mt-2 text-[10px] text-white/20">{store.name} &middot; {store.short_desc}</p>
+        <p className="mt-2 text-[10px] text-white/20 capitalize">{store.name} &middot; {store.short_desc}</p>
       </footer>
+
+      <BrandFooter className="pb-24" />
 
       <BottomNav />
 
-      {dateOpen && <DateSheet options={dateOptions} selected={selectedDate} onSelect={(iso) => { setSelectedDate(iso); setDateOpen(false) }} onClose={() => setDateOpen(false)} />}
+      {dateOpen && <DateSheet options={dateOptions} selected={selectedDate} onSelect={(iso) => { setSelectedDate(iso); setDateOpen(false) }} onClose={() => setDateOpen(false)} accent={accent} />}
     </div>
   )
 }

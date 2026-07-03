@@ -1,11 +1,12 @@
 'use client'
 
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { ArrowRight, Phone, ShieldCheck, HelpCircle, CheckCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useLanguage, t } from '@/lib/k14-store'
+import BrandFooter from '@/components/BrandFooter'
 
 /* ─── phone normaliser ─── */
 function toE164(raw: string): string | null {
@@ -57,12 +58,36 @@ function LoginInner() {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const marqueeRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const params = useSearchParams()
   const redirect = params.get('redirect') || '/stores'
   const { lang, setLang } = useLanguage()
 
   useEffect(() => { setMounted(true) }, [])
+
+  // Colour the marquee tile passing through the centre of the screen; grey out the rest.
+  useEffect(() => {
+    let raf: number
+    const tick = () => {
+      const el = marqueeRef.current
+      if (el) {
+        const centerX = window.innerWidth / 2
+        const icons = el.querySelectorAll<HTMLElement>('[data-cat-icon]')
+        icons.forEach((icon) => {
+          const rect = icon.getBoundingClientRect()
+          const iconCenter = rect.left + rect.width / 2
+          const dist = Math.abs(iconCenter - centerX)
+          // Fully colour within ~half a tile of centre, fade to B&W by ~1.5 tiles away.
+          const gray = Math.min(1, Math.max(0, (dist - 28) / 70))
+          icon.style.filter = `grayscale(${gray})`
+        })
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [])
 
   async function handleContinue(e: React.FormEvent) {
     e.preventDefault()
@@ -248,14 +273,19 @@ function LoginInner() {
         </form>
       </div>
 
-      <div className="px-6 mt-7">
-        <p className="mb-3.5 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-[#0e3d2a]/70">
-          {t('Shop by Category', 'श्रेणी चुनें', lang)}
-        </p>
-        <div className="grid grid-cols-4 gap-x-3 gap-y-5">
-          {categories.map((cat, i) => (
-            <div key={i} className="flex flex-col items-center text-center gap-1.5">
-              <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100/80 shadow-md shadow-gray-200/60 flex items-center justify-center text-2xl">
+      <div className="mt-7 overflow-hidden">
+        <style>{`
+          @keyframes catScrollLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+          .cat-marquee { display: flex; width: max-content; }
+          .cat-track-rtl { animation: catScrollLeft 32s linear infinite; }
+        `}</style>
+        <div ref={marqueeRef} className="cat-marquee cat-track-rtl">
+          {[...categories, ...categories].map((cat, i) => (
+            <div key={i} className="flex flex-col items-center text-center gap-1.5 shrink-0 w-[86px]">
+              <div
+                data-cat-icon
+                className="w-14 h-14 rounded-2xl bg-white border border-gray-100/80 shadow-md shadow-gray-200/60 flex items-center justify-center text-2xl"
+              >
                 {cat.icon}
               </div>
               <p
@@ -337,6 +367,32 @@ function LoginInner() {
             </div>
           ))}
         </div>
+
+        {/* Become a Partner */}
+        <button
+          type="button"
+          onClick={() => router.push('/partner')}
+          className="mt-6 flex w-full items-center justify-between gap-3 rounded-2xl border border-[#d4af37]/40 bg-white px-4 py-3.5 shadow-sm active:scale-[0.99] transition-transform"
+        >
+          <span className="flex items-center gap-3">
+            <span className="flex items-center justify-center size-9 rounded-xl bg-[#0e3d2a]/8 text-lg">🏪</span>
+            <span className="flex flex-col text-left">
+              <span
+                className="text-[13px] font-bold text-[#0e3d2a] leading-tight"
+                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
+              >
+                {t('Become a Partner', 'हमारे पार्टनर बनें', lang)}
+              </span>
+              <span
+                className="text-[10px] font-semibold text-gray-400 leading-tight"
+                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
+              >
+                {t('List your store with us', 'अपनी दुकान लिस्ट करें', lang)}
+              </span>
+            </span>
+          </span>
+          <ArrowRight className="size-4 text-[#d4af37]" />
+        </button>
       </div>
 
       {/* Sticky Bottom Tagline Footer */}
@@ -350,6 +406,8 @@ function LoginInner() {
             : '— HAR NIYAZ MEIN BARAKAT, HAR TABARRUK MEIN MOHABBAT —'}
         </p>
       </div>
+
+      <BrandFooter />
     </div>
   )
 }

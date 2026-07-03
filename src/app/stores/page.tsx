@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, ArrowUpRight, Wheat, UtensilsCrossed, Package, Lock } from 'lucide-react'
+import { Loader2, ArrowUpRight, Wheat, UtensilsCrossed, Package, Lock, Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useLanguage, useActiveStore, t } from '@/lib/k14-store'
 import type { Store } from '@/lib/types'
 import BottomNav from '@/components/BottomNav'
+import BrandFooter from '@/components/BrandFooter'
 
 const GREEN = '#0e3d2a'
 
@@ -14,6 +15,14 @@ const GREEN = '#0e3d2a'
    the DB). The kebabchi logo will be dropped in here once provided. */
 const STORE_LOGOS: Record<string, string> = {
   'k14-bakery': '/k14-logo.png',
+  'kebabchi': '/kebabchi-logo.jpg',
+  'kabacchi': '/kebabchi-logo.jpg', // pre-rename slug fallback
+}
+
+/* Background behind a store's logo (some logos ship with their own bg colour). */
+const STORE_LOGO_BG: Record<string, string> = {
+  'kebabchi': '#1a1a1a',
+  'kabacchi': '#1a1a1a',
 }
 
 /* ── store icon map — fallback icons per slug ── */
@@ -40,6 +49,9 @@ export default function StoresPage() {
   const setStore = useActiveStore((s) => s.setStore)
 
   useEffect(() => { setMounted(true) }, [])
+
+  // Prefetch the search page so opening it feels in-place, not like a nav.
+  useEffect(() => { router.prefetch('/search') }, [router])
 
   useEffect(() => {
     const supabase = createClient()
@@ -87,6 +99,15 @@ export default function StoresPage() {
             </p>
           </div>
         </div>
+
+        {/* Search bar — tapping opens /search where this same bar becomes a live input */}
+        <button
+          onClick={() => router.push('/search')}
+          className="mt-3 flex w-full items-center gap-2.5 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-left shadow-sm transition-colors hover:border-[#0e3d2a]/30 active:scale-[0.99]"
+        >
+          <Search className="size-4 shrink-0 text-gray-400" />
+          <span className="text-sm text-gray-400">{t('Search for products…', 'उत्पाद खोजें…', lang)}</span>
+        </button>
       </header>
 
       <div className="px-5 pt-7 space-y-8">
@@ -132,7 +153,7 @@ export default function StoresPage() {
                       className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border"
                       style={
                         logo
-                          ? { background: GREEN, borderColor: `${accent}30` }
+                          ? { background: STORE_LOGO_BG[store.slug] || GREEN, borderColor: `${accent}30` }
                           : { background: `${accent}14`, borderColor: `${accent}33` }
                       }
                     >
@@ -149,7 +170,7 @@ export default function StoresPage() {
                       <h2 className="text-[15px] font-extrabold leading-tight text-gray-900">
                         {store.name}
                       </h2>
-                      <p className="mt-1 line-clamp-2 text-[10.5px] leading-snug text-gray-500">
+                      <p className="mt-1 line-clamp-2 text-[10.5px] leading-snug text-gray-500 capitalize">
                         {store.short_desc}
                       </p>
                     </div>
@@ -200,7 +221,7 @@ export default function StoresPage() {
 
                   <div className="min-w-0">
                     <h2 className="text-[15px] font-extrabold leading-tight text-gray-400">{store.name}</h2>
-                    <p className="mt-1 line-clamp-2 text-[10.5px] leading-snug text-gray-400/80">{store.short_desc}</p>
+                    <p className="mt-1 line-clamp-2 text-[10.5px] leading-snug text-gray-400/80 capitalize">{store.short_desc}</p>
                   </div>
 
                   <span className="inline-flex items-center rounded-full border border-[#d4af37]/30 bg-[#d4af37]/[0.08] px-2.5 py-0.5 text-[8.5px] font-bold tracking-[0.14em] text-[#b8952a]">
@@ -228,6 +249,8 @@ export default function StoresPage() {
             BOOKMYTABARRUK
           </p>
         </div>
+
+        <BrandFooter className="pb-24" />
       </div>
       <BottomNav />
     </div>
