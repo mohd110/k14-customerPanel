@@ -80,7 +80,20 @@
       "Bash(node -e ' *)",
       "Bash(rm -f public/k14-logo.png.bak)",
       "PowerShell(Add-Type -AssemblyName System.Drawing; $files = @\\(\"menu 1.png\",\"menu 2.png\",\"menu 3.png\",\"menu 4.png\"\\); foreach\\($f in $files\\){ $p = Join-Path \"C:\\\\Users\\\\mohdm\\\\Desktop\" $f; $img = [System.Drawing.Image]::FromFile\\($p\\); Write-Output \\(\"{0}: {1} x {2}\" -f $f, $img.Width, $img.Height\\); $img.Dispose\\(\\) })",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(python -c 'import sys,json *)",
+      "Bash(cp '__TRACKED_VAR__/ajwain khari single new .jpeg' khari-ajwain-single.jpg)",
+      "Bash(cp '__TRACKED_VAR__/ajwain khari bulk new .jpeg' khari-ajwain-bulk.jpg)",
+      "Bash(cp '__TRACKED_VAR__/jeera kahri single new .jpeg' khari-jeera-single.jpg)",
+      "Bash(cp '__TRACKED_VAR__/jeera khari bulk new .jpeg' khari-jeera-bulk.jpg)",
+      "Bash(cp '__TRACKED_VAR__/namak para single new.jpeg' namak-para-single.jpg)",
+      "Bash(cp '__TRACKED_VAR__/namak para bulk new .jpeg' namak-para-bulk.jpg)",
+      "Bash(git fetch *)",
+      "Bash(git rev-list *)",
+      "Bash(node -e \"console.log\\(require\\('./package.json'\\).scripts\\)\")",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(taskkill /PID 22548 /F)",
+      "Bash(rm -rf .next/cache)"
     ]
   }
 }
