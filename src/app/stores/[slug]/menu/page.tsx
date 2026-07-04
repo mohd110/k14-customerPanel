@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { Search, ShoppingBag, CalendarDays, ChevronDown, Check, Plus, X, Loader2, ArrowLeft } from 'lucide-react'
+import { Search, ShoppingBag, CalendarDays, Plus, X, Loader2, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Product, Store } from '@/lib/types'
 import { useCart, useHydrated, cartCount, useMenuDate, useLanguage, t } from '@/lib/k14-store'
@@ -12,9 +12,10 @@ import { money } from '@/lib/format'
 import { placeholderImage } from '@/lib/placeholder-image'
 import { galleryFor, GALLERY_CAPTIONS } from '@/lib/product-gallery'
 import ProductImageSlider from '@/components/ProductImageSlider'
-import { upcomingDatesThrough, endOfAugustIso, formatIso, hijriFromIso, minMenuIso, type DateOption } from '@/lib/dates'
+import { upcomingDatesThrough, endOfAugustIso, formatIso, minMenuIso } from '@/lib/dates'
 import BottomNav from '@/components/BottomNav'
 import BrandFooter from '@/components/BrandFooter'
+import DateSheet from '@/components/DateSheet'
 
 function ItemCard({
   item,
@@ -112,37 +113,6 @@ function ItemSheet({ item, gallery, accent, onConfirm, onClose }: { item: Produc
         <button onClick={confirm} style={{ backgroundColor: accent }} className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold text-white shadow-lg transition-transform active:scale-[0.98]">
           <Plus className="size-4" /> {t('Add to Tabarruk', 'तबर्रुक में जोड़ें', lang)}
         </button>
-      </div>
-    </div>
-  )
-}
-
-function DateSheet({ options, selected, onSelect, onClose, accent }: { options: DateOption[]; selected: string | null; onSelect: (iso: string) => void; onClose: () => void; accent: string }) {
-  const { lang } = useLanguage()
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="phone-screen w-full rounded-t-3xl border-t border-gray-100 bg-white p-6 pb-8 animate-in slide-in-from-bottom duration-200" onClick={(e) => e.stopPropagation()}>
-        <div className="mb-5 flex items-start justify-between gap-3">
-          <div><h3 className="font-serif-display text-lg font-bold text-gray-900">{t('Select a date', 'तारीख़ चुनें', lang)}</h3><p className="mt-0.5 text-xs text-gray-500">{t("Choose a delivery date to see that day's menu.", 'उस दिन का मेन्यू देखने के लिए डिलीवरी तारीख़ चुनें।', lang)}</p></div>
-          <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-700"><X className="size-5" /></button>
-        </div>
-        <div className="max-h-[55vh] space-y-2 overflow-y-auto">
-          {options.map((d) => {
-            const active = d.iso === selected
-            return (
-              <button key={d.iso} onClick={() => onSelect(d.iso)} style={active ? { borderColor: accent, backgroundColor: `${accent}1a` } : undefined} className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${active ? '' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-gray-100">
-                    <span className="text-[9px] font-bold tracking-wider" style={{ color: accent }}>{d.month.toUpperCase()}</span>
-                    <span className="text-base font-bold leading-none text-gray-900">{d.day}</span>
-                  </div>
-                  <div><p className="text-sm font-semibold text-gray-900">{d.weekday}</p><p className="text-xs text-gray-500">{d.full}</p>{hijriFromIso(d.iso) && <p className="text-[11px] font-semibold text-[#e23744]">{hijriFromIso(d.iso)}</p>}</div>
-                </div>
-                {active && <Check className="size-5" style={{ color: accent }} />}
-              </button>
-            )
-          })}
-        </div>
       </div>
     </div>
   )
@@ -297,6 +267,16 @@ function StoreMenuInner({ params }: { params: Promise<{ slug: string }> }) {
         <p className="text-xs text-gray-400 font-medium">Book My Tabarruk</p>
         <p className="mt-2 text-[10px] text-gray-400 capitalize">{store.name} &middot; {store.short_desc}</p>
       </footer>
+
+      {/* FSSAI licence disclaimer — Swiggy-style understated line at the menu's end. */}
+      <section className="px-6 pb-4 pt-2">
+        <p className="font-serif-display text-lg font-bold leading-tight text-gray-300">
+          {t('License No.', 'लाइसेंस नं.', lang)}
+        </p>
+        <p className="mt-1 font-mono text-sm font-semibold tracking-wide text-gray-300">
+          22726751000157
+        </p>
+      </section>
 
       <BrandFooter className="pb-24" />
 
