@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { Search, ShoppingBag, CalendarDays, Plus, X, Loader2, ArrowLeft } from 'lucide-react'
+import { Search, ShoppingBag, CalendarDays, Plus, X, Loader2, ArrowLeft, AlertCircle, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Product, Store } from '@/lib/types'
 import { useCart, useHydrated, cartCount, useMenuDate, useLanguage, t } from '@/lib/k14-store'
@@ -153,6 +153,13 @@ function StoreMenuInner({ params }: { params: Promise<{ slug: string }> }) {
     if (selectedDate && selectedDate < minMenuIso()) setSelectedDate(null)
   }, [selectedDate, setSelectedDate])
 
+  // The date is stored globally and persists, so a previously-picked date would
+  // skip the gate. Reset on each store open so the menu always starts at the
+  // "please select a date" prompt.
+  useEffect(() => {
+    setSelectedDate(null)
+  }, [slug, setSelectedDate])
+
   useEffect(() => {
     const supabase = createClient()
     supabase.from('stores').select('*').eq('slug', slug).single().then(({ data }: { data: Store | null }) => {
@@ -268,14 +275,35 @@ function StoreMenuInner({ params }: { params: Promise<{ slug: string }> }) {
         <p className="mt-2 text-[10px] text-gray-400 capitalize">{store.name} &middot; {store.short_desc}</p>
       </footer>
 
-      {/* FSSAI licence disclaimer — Swiggy-style understated line at the menu's end. */}
+      {/* Disclaimer + FSSAI — Swiggy-style block at the menu's end. */}
       <section className="px-6 pb-4 pt-2">
-        <p className="font-serif-display text-lg font-bold leading-tight text-gray-300">
-          {t('License No.', 'लाइसेंस नं.', lang)}
-        </p>
-        <p className="mt-1 font-mono text-sm font-semibold tracking-wide text-gray-300">
-          22726751000157
-        </p>
+        <h3 className="text-sm font-bold text-gray-600">{t('Disclaimer :', 'अस्वीकरण :', lang)}</h3>
+        <ul className="mt-3 space-y-2.5 text-xs leading-relaxed text-gray-500">
+          {[
+            t('All prices are set directly by the restaurant.', 'सभी क़ीमतें सीधे रेस्तराँ द्वारा तय की जाती हैं।', lang),
+            t('All nutritional information is indicative, values are per serve as shared by the restaurant and may vary depending on the ingredients and portion size.', 'सभी पोषण संबंधी जानकारी सांकेतिक है; मान प्रति सर्व हैं जैसा रेस्तराँ द्वारा साझा किया गया, और सामग्री व मात्रा के अनुसार भिन्न हो सकते हैं।', lang),
+            t('An average active adult requires 2,000 kcal energy per day, however, calorie needs may vary.', 'एक औसत सक्रिय वयस्क को प्रतिदिन 2,000 किलो कैलोरी ऊर्जा की आवश्यकता होती है, हालाँकि कैलोरी की ज़रूरत भिन्न हो सकती है।', lang),
+            t('Dish details might be AI crafted for a better experience.', 'बेहतर अनुभव के लिए व्यंजन का विवरण AI द्वारा तैयार किया गया हो सकता है।', lang),
+          ].map((line, i) => (
+            <li key={i} className="flex gap-2.5">
+              <span className="mt-[7px] size-1 shrink-0 rounded-full bg-gray-400" />
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+
+        <button
+          onClick={() => toast(t('Please contact us to report a menu issue.', 'मेन्यू में समस्या की रिपोर्ट के लिए हमसे संपर्क करें।', lang))}
+          className="mt-4 flex w-full items-center justify-between gap-2 border-t border-gray-200 pt-4 text-gray-600"
+        >
+          <span className="flex items-center gap-2 text-sm"><AlertCircle className="size-4" /> {t('Report an issue with the menu', 'मेन्यू में समस्या की रिपोर्ट करें', lang)}</span>
+          <ChevronRight className="size-4 text-gray-400" />
+        </button>
+
+        <div className="mt-4 flex items-baseline gap-2 border-t border-gray-200 pt-4">
+          <span className="font-serif-display text-2xl font-bold italic text-gray-300">fssai</span>
+          <span className="text-sm font-medium text-gray-400">{t('License No.', 'लाइसेंस नं.', lang)} 22726751000157</span>
+        </div>
       </section>
 
       <BrandFooter className="pb-24" />

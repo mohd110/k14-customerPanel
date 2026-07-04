@@ -17,12 +17,14 @@ const STORE_LOGOS: Record<string, string> = {
   'k14-bakery': '/k14-logo.png',
   'kebabchi': '/kebabchi-logo.jpg',
   'kabacchi': '/kebabchi-logo.jpg', // pre-rename slug fallback
+  'pista-house': '/pista-house-logo.jpg',
 }
 
 /* Background behind a store's logo (some logos ship with their own bg colour). */
 const STORE_LOGO_BG: Record<string, string> = {
   'kebabchi': '#1a1a1a',
   'kabacchi': '#1a1a1a',
+  'pista-house': '#332445', // logo's own deep-purple background, blends seamlessly
 }
 
 /* ── store icon map — fallback icons per slug ── */
