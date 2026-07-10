@@ -4,6 +4,17 @@
 // a rusk for rusks). Remove once real product photos are uploaded.
 
 const KEYWORD_IMAGES: [RegExp, string][] = [
+  // ── Pista House bakery items (real photos). Listed first so specific
+  // matches win over the generic rules below (e.g. "chicken puff" must
+  // beat /chicken/, "paneer puff" must beat /paneer/). ──
+  [/bun\s*maska/i, '/pista/bun-maska.jpg'],
+  [/chicken\s*puff/i, '/pista/chicken-puff.jpg'],
+  [/dry\s*fruit\s*puff/i, '/pista/dry-fruit-puff.png'],
+  [/french\s*heart/i, '/pista/french-heart.jpg'],
+  [/osmania/i, '/pista/osmania-biscuits.jpg'],
+  [/paneer\s*puff/i, '/pista/paneer-puff.jpg'],
+  [/sponge\s*cake/i, '/pista/sponge-cake-slice.jpg'],
+  [/veg\s*puff/i, '/pista/veg-puff.jpg'],
   [/rusk/i, '/k14/cardamom-rusk.png'],
   [/\bbun\b|pav|burger/i, '/k14/sweet-milk-buns.png'],
   [/naan|sweet|bakery|bread/i, '/k14/naan-sweets.png'],
