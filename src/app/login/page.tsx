@@ -8,6 +8,10 @@ import { createClient } from '@/lib/supabase/client'
 import { useLanguage, t } from '@/lib/k14-store'
 import BrandFooter from '@/components/BrandFooter'
 
+/* ─── Google Apps Script endpoint (same sheet the BookMyTabarruk form saves to) ─── */
+const CALLBACK_SHEETS_URL =
+  'https://script.google.com/macros/s/AKfycbyimOhlVFuLa6W1TwDhfYLCuV7iVxcfQzOiiFDl3DsQuPXTNkuiAVAaB8W97qWdHyxY/exec'
+
 /* ─── phone normaliser ─── */
 function toE164(raw: string): string | null {
   const digits = raw.replace(/[^\d]/g, '')
@@ -59,6 +63,15 @@ function LoginInner() {
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
   const marqueeRef = useRef<HTMLDivElement>(null)
+
+  /* ─── Request-a-call-back modal state ─── */
+  const [cbOpen, setCbOpen] = useState(false)
+  const [cbSubmitting, setCbSubmitting] = useState(false)
+  const [cbSuccess, setCbSuccess] = useState<string | null>(null)
+  const [cbName, setCbName] = useState('')
+  const [cbPhone, setCbPhone] = useState('')
+  const [cbDate, setCbDate] = useState('')
+  const [cbNotes, setCbNotes] = useState('')
   const router = useRouter()
   const params = useSearchParams()
   const redirect = params.get('redirect') || '/stores'
@@ -157,6 +170,55 @@ function LoginInner() {
 
     router.push(redirect)
     router.refresh()
+  }
+
+  /* ─── Request a call back → save to the same Google Sheet as an INQ record ─── */
+  async function handleCallbackSubmit(e: React.FormEvent) {
+    e.preventDefault()
+
+    const name = cbName.trim()
+    const mobile = cbPhone.replace(/[^\d]/g, '')
+    if (!name) {
+      toast.error(t('Please enter your name', 'कृपया अपना नाम दर्ज करें', lang))
+      return
+    }
+    if (!/^[0-9]{10}$/.test(mobile)) {
+      toast.error(t('Enter a valid 10-digit mobile number', 'सही मोबाइल नंबर दर्ज करें', lang))
+      return
+    }
+
+    setCbSubmitting(true)
+
+    // Reference ID — same format as the order form, but prefixed INQ (inquiry) instead of ORD
+    const now = new Date()
+    const dd = String(now.getDate()).padStart(2, '0')
+    const MM = String(now.getMonth() + 1).padStart(2, '0')
+    const YY = String(now.getFullYear()).slice(-2)
+    const randNum = Math.floor(Math.random() * 9000) + 1000
+    const refId = `INQ-k14-${dd}${MM}${YY}-${randNum}`
+
+    const payload = {
+      referenceId: refId,
+      fullName: name,
+      mobileNumber: mobile,
+      dateOfMajlis: cbDate,
+      orderNotes: cbNotes.trim(),
+      timestamp: now.toISOString(),
+    }
+
+    try {
+      // Raw JSON body with no Content-Type header → text/plain, so no-cors reaches Apps Script.
+      await fetch(CALLBACK_SHEETS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(payload),
+      })
+      setCbSuccess(refId)
+    } catch (err) {
+      toast.error(t('Something went wrong. Please try again.', 'कुछ गड़बड़ हुई। कृपया पुनः प्रयास करें।', lang))
+    } finally {
+      setCbSubmitting(false)
+    }
   }
 
   const isHindi = lang === 'hi'
@@ -271,6 +333,21 @@ function LoginInner() {
             )}
           </button>
         </form>
+
+        {/* Request a call back link */}
+        <div className="mt-4 flex items-center justify-center gap-2 text-center">
+          <span className="text-[12px] font-semibold text-gray-400" style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}>
+            {t('or', 'या', lang)}
+          </span>
+          <button
+            type="button"
+            onClick={() => { setCbSuccess(null); setCbOpen(true) }}
+            className="text-[13px] font-bold text-[#1a7d3f] hover:text-[#0e5c2c] transition-colors"
+            style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
+          >
+            {t('Request a call back', 'कॉल बैक का अनुरोध करें', lang)}
+          </button>
+        </div>
       </div>
 
       <div className="mt-7 overflow-hidden">
@@ -406,6 +483,158 @@ function LoginInner() {
             : '— HAR NIYAZ MEIN BARAKAT, HAR TABARRUK MEIN MOHABBAT —'}
         </p>
       </div>
+
+      {/* ══════════════════════════════════════════
+          REQUEST A CALL BACK — MODAL
+      ══════════════════════════════════════════ */}
+      {cbOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm px-3 py-4"
+          onClick={() => { if (!cbSubmitting) setCbOpen(false) }}
+        >
+          <div
+            className="w-full max-w-sm max-h-[92dvh] overflow-y-auto rounded-3xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div
+              className="relative rounded-t-3xl px-5 pt-5 pb-6 text-center"
+              style={{ background: 'linear-gradient(180deg, #0e3d2a 0%, #072519 100%)' }}
+            >
+              <button
+                type="button"
+                onClick={() => { if (!cbSubmitting) setCbOpen(false) }}
+                className="absolute top-3.5 right-4 text-white/70 hover:text-white text-xl leading-none"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+              <h3
+                className="text-lg font-bold text-white"
+                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
+              >
+                {t('Request a Call Back', 'कॉल बैक का अनुरोध', lang)}
+              </h3>
+              <p
+                className="mt-1 text-[11.5px] text-[#d4af37]/90"
+                style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}
+              >
+                {t('Share your details, our team will call you', 'अपनी जानकारी दें, हमारी टीम आपको कॉल करेगी', lang)}
+              </p>
+            </div>
+
+            {cbSuccess ? (
+              /* ── Success state ── */
+              <div className="px-6 py-8 text-center">
+                <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-[#1a7d3f]/10">
+                  <CheckCircle className="size-9 text-[#1a7d3f]" />
+                </div>
+                <h4 className="text-base font-bold text-gray-900" style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}>
+                  {t('Request Sent Successfully!', 'अनुरोध सफलतापूर्वक भेजा गया!', lang)}
+                </h4>
+                <p className="mt-1.5 text-[13px] text-gray-500 leading-relaxed" style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}>
+                  {t('We will contact you shortly.', 'हम जल्द ही आपसे संपर्क करेंगे।', lang)}
+                </p>
+                <p className="mt-3 inline-block rounded-lg bg-gray-100 px-3 py-1.5 text-[12px] font-bold tracking-wide text-gray-600">
+                  {cbSuccess}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setCbOpen(false); setCbName(''); setCbPhone(''); setCbDate(''); setCbNotes('') }}
+                  className="mt-6 w-full rounded-2xl py-3.5 text-[14px] font-bold text-white shadow-lg active:scale-[0.98] transition-transform"
+                  style={{ background: 'linear-gradient(180deg, #1a5c35 0%, #0e3d22 100%)' }}
+                >
+                  {t('Done', 'ठीक है', lang)}
+                </button>
+              </div>
+            ) : (
+              /* ── Form state ── */
+              <form onSubmit={handleCallbackSubmit} className="px-5 py-5 space-y-3.5">
+                <div>
+                  <label className="mb-1 block text-[12px] font-bold text-gray-600" style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}>
+                    {t('Full Name', 'पूरा नाम', lang)}
+                  </label>
+                  <input
+                    type="text"
+                    value={cbName}
+                    onChange={(e) => setCbName(e.target.value)}
+                    placeholder={t('Enter your full name', 'अपना पूरा नाम दर्ज करें', lang)}
+                    className="h-12 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 text-[15px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#0e3d2a] focus:ring-2 focus:ring-[#0e3d2a]/10 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-[12px] font-bold text-gray-600" style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}>
+                    {t('Mobile Number', 'मोबाइल नंबर', lang)}
+                  </label>
+                  <div className="flex items-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 focus-within:border-[#0e3d2a] focus-within:ring-2 focus-within:ring-[#0e3d2a]/10 transition-all">
+                    <div className="flex items-center gap-1.5 px-3.5 py-3 border-r border-gray-200 shrink-0">
+                      <span className="text-base">🇮🇳</span>
+                      <span className="text-sm font-bold text-gray-500">+91</span>
+                    </div>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      value={cbPhone}
+                      onChange={(e) => setCbPhone(e.target.value)}
+                      placeholder={t('Enter mobile number', 'मोबाइल नंबर दर्ज करें', lang)}
+                      className="h-12 w-full bg-transparent px-3.5 text-[15px] text-gray-900 placeholder:text-gray-400 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-[12px] font-bold text-gray-600" style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}>
+                    {t('Date of Majlis', 'मजलिस की तारीख', lang)}
+                  </label>
+                  <input
+                    type="date"
+                    value={cbDate}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setCbDate(e.target.value)}
+                    className="h-12 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 text-[15px] text-gray-900 outline-none focus:border-[#0e3d2a] focus:ring-2 focus:ring-[#0e3d2a]/10 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-[12px] font-bold text-gray-600" style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}>
+                    {t('Order Notes (What to order?)', 'ऑर्डर नोट्स (क्या ऑर्डर करना है?)', lang)}
+                  </label>
+                  <textarea
+                    value={cbNotes}
+                    onChange={(e) => setCbNotes(e.target.value)}
+                    rows={3}
+                    placeholder={t('e.g. 50 packs of Mughlai Biryani, Dry Fruits mix...', 'जैसे 50 पैक मुगलई बिरयानी, ड्राई फ्रूट्स...', lang)}
+                    className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-[#0e3d2a] focus:ring-2 focus:ring-[#0e3d2a]/10 transition-all resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={cbSubmitting}
+                  className="mt-1 flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl text-[15px] font-bold text-white shadow-lg active:scale-[0.98] transition-transform disabled:opacity-60"
+                  style={{ background: 'linear-gradient(180deg, #1a5c35 0%, #0e3d22 100%)' }}
+                >
+                  {cbSubmitting ? (
+                    <span className="size-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <span style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}>
+                      {t('REQUEST A CALL BACK', 'कॉल बैक का अनुरोध करें', lang)}
+                    </span>
+                  )}
+                </button>
+
+                <div className="flex items-center justify-center gap-1.5 pt-0.5 text-gray-400">
+                  <ShieldCheck className="size-3.5" />
+                  <span className="text-[10.5px]" style={isHindi ? { fontFamily: 'var(--font-devanagari), sans-serif' } : {}}>
+                    {t('We respect your privacy & secure your data', 'हम आपकी निजता का सम्मान करते हैं', lang)}
+                  </span>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       <BrandFooter />
     </div>
